@@ -1,0 +1,166 @@
+---
+title: "Commands"
+description: "All Promptster CLI commands — reference for candidates."
+---
+
+Run `promptster` with no arguments to open an interactive menu. Pass a command directly to skip the menu.
+
+```bash
+promptster <command> [flags]
+```
+
+## Command reference
+
+<AccordionGroup>
+  <Accordion title="promptster start <key>">
+    Redeems your assessment key, clones or prepares your workspace, configures Claude Code and Cursor hooks, and starts the session. This is the first command you run.
+
+    ```bash
+    promptster start PST-ABCD-1234
+    ```
+
+    The key format is `PST-XXXX-XXXX`. You can also run `promptster` with no arguments to get an interactive menu that prompts you for the key.
+
+    **What `start` does:**
+
+    <Steps>
+      <Step title="Redeems your key">Validates the key against the Promptster API and loads the session.</Step>
+      <Step title="Accepts terms of service">Prompts you to review and accept before proceeding.</Step>
+      <Step title="Prepares your workspace">Clones the starter repo (if provided) or lets you choose a workspace directory.</Step>
+      <Step title="Configures hooks">Writes Promptster hooks into your Claude Code and Cursor project settings so telemetry is captured automatically.</Step>
+      <Step title="Saves your session">Saves your session state locally and starts background event monitoring.</Step>
+    </Steps>
+
+    **Flags:**
+
+    | Flag | Description |
+    |------|-------------|
+    | `--accept-tos` | Accept the terms of service non-interactively (for scripted or CI use). |
+    | `--workspace PATH` | Use `PATH` as the workspace directory instead of prompting interactively. |
+
+    **Example — non-interactive:**
+
+    ```bash
+    promptster start PST-ABCD-1234 --accept-tos --workspace ~/my-assessment
+    ```
+
+    <Note>
+      The task brief is also written to `TASK.md` in your workspace so Claude Code and Cursor can reference it directly.
+    </Note>
+  </Accordion>
+
+  <Accordion title="promptster done">
+    Submits your assessment. Uploads workspace code, flushes all buffered events, and marks the session complete.
+
+    ```bash
+    promptster done
+    ```
+
+    When submission succeeds, you receive a results link. The session state and hooks are cleaned up automatically.
+
+    <Warning>
+      If you have queued decision items that still need rationale, `promptster done` will refuse to proceed. Run `promptster explain` to document them first.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="promptster brief">
+    Shows the current task brief, time remaining, and workspace path. Use this to check the task description at any point during your assessment.
+
+    ```bash
+    promptster brief
+    ```
+
+    Alias: `promptster task`
+
+    The same information is also available in `TASK.md` in your workspace root.
+  </Accordion>
+
+  <Accordion title="promptster status">
+    Shows session info: session ID, start time, time elapsed, time remaining (if a limit is set), and the live event count fetched from the backend.
+
+    ```bash
+    promptster status
+    ```
+
+    Example output:
+
+    ```
+    ╭──────────────────────────────────────────────────────────────╮
+    │ Assessment Status                                            │
+    │                                                              │
+    │ Session ID:  sess_01abc...                                   │
+    │ Started:     2025-01-15 09:30:00                             │
+    │ Elapsed:     42m15s                                          │
+    │ Remaining:   17m45s                                          │
+    │ Events:      134                                             │
+    │ Status:      active                                          │
+    ╰──────────────────────────────────────────────────────────────╯
+    ```
+  </Accordion>
+
+  <Accordion title="promptster explain [--last <duration>]">
+    Opens an interactive terminal UI to document your decision rationale for recent work. Use this to capture the *why* behind significant architectural choices.
+
+    ```bash
+    promptster explain
+    promptster explain --last 30m
+    ```
+
+    **Flags:**
+
+    | Flag | Default | Description |
+    |------|---------|-------------|
+    | `--last <duration>` | `20m` | How far back to look for recent activity (e.g. `15m`, `30m`, `1h`). Max 60 minutes. |
+
+    When you run `promptster explain`, the CLI:
+
+    1. Fetches a summary of your recent activity (files changed, commands run) from the backend.
+    2. Displays the activity context in a box.
+    3. Opens a multi-line text editor — type your rationale, then press **Ctrl+D** to submit or **Esc** to cancel.
+
+    You can also pass rationale directly as an argument for quick one-liners:
+
+    ```bash
+    promptster explain "chose Postgres over SQLite because the task requires concurrent writes"
+    ```
+
+    See [Decisions](/candidates/cli/decisions) for more detail on how decision capture works.
+  </Accordion>
+
+  <Accordion title="promptster doctor">
+    Checks your local Promptster setup and reports the status of each component: CLI version, active session, Claude Code binary, project hooks, and PATH configuration.
+
+    ```bash
+    promptster doctor
+    ```
+
+    Each check is printed with a green `✓` (pass) or red `✗` (fail). Failed checks include a suggested fix command.
+
+    Run this first if hooks don't appear to be capturing events, or if `promptster start` behaves unexpectedly.
+  </Accordion>
+
+  <Accordion title="promptster version">
+    Prints the installed CLI version.
+
+    ```bash
+    promptster version
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Interactive menu
+
+Running `promptster` with no arguments opens a numbered menu. You can type a menu number or paste your assessment key directly at the prompt — the CLI detects the `PST-` prefix automatically.
+
+```
+  Promptster  v1.2.3
+
+   1  Start assessment       Redeem a key and begin
+   2  View task brief        Show the current task + time remaining
+   3  Explain a decision     Document your rationale for recent work
+   4  Check status           Show session info and event count
+   5  Submit assessment      Push code and complete the session
+   6  Help                   Show all available commands
+
+  ❯
+```

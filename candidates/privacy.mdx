@@ -1,0 +1,39 @@
+---
+title: "Privacy & Data"
+description: "What Promptster captures during your assessment, how it's stored, and your rights."
+---
+
+<Note>Your reviewer sees your process, not your secrets.</Note>
+
+## What is captured
+
+| Category | What is recorded | Example |
+|---|---|---|
+| Prompts | Text of prompts you submit to the AI | "Refactor this function to use async/await" |
+| AI tool calls | Actions taken by the AI on your behalf | File edits, shell commands, web searches |
+| File changes | Unified diffs of files the AI creates or edits | +12 lines in auth.ts |
+| Shell commands | Command text and exit code | `pnpm test` → exit 0 |
+| Architecture decisions | Decision title, chosen option, and your rationale | "Use a message queue over polling for webhook ingestion" |
+| Session metadata | Start/end time, workspace path, tool version | Session started at 09:32 UTC |
+
+## What is NOT captured
+
+- Keystrokes between prompts
+- File contents you never ask the AI to touch
+- Environment variables and secrets
+- Browser activity or anything outside your coding tool session
+- Clipboard contents
+- Your file system outside the workspace
+
+## Data retention
+
+Data is retained for 90 days after your session ends. To request deletion, email [privacy@promptster.ai](mailto:privacy@promptster.ai).
+
+## Who can see your data
+
+- The hiring team that created the assessment
+- Promptster staff for support purposes only
+
+## Attribution model
+
+Promptster tracks the *provenance* of changes — whether a change was likely AI-generated, human-initiated, or mixed. This is done using confidence levels, not exact authorship claims. Promptster does not make binary "AI wrote this / human wrote this" judgments.

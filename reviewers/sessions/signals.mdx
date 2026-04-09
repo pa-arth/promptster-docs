@@ -1,0 +1,125 @@
+---
+title: "Signals"
+description: "Understand the derived signals Promptster computes to evaluate engineering judgment."
+---
+
+## What are signals?
+
+Signals are structured, hiring-relevant metrics derived from a candidate's session telemetry. They sit between raw events and human judgment — they answer specific questions about *how* the candidate worked, not just what they produced.
+
+Signals are **not scores**. They are evidence with confidence levels that feed reviewer dashboards and comparison views. A signal says "here is what happened"; you decide what it means.
+
+<Note>
+  No signal penalizes AI usage. A candidate who uses AI heavily but prompts well, verifies their work, and documents decisions will score excellently. Promptster measures *how well* candidates work with AI, not whether they use it.
+</Note>
+
+<Info>
+  Signal derivation runs as a background job after the session ends. Allow a few minutes after `promptster done` for signals to appear.
+</Info>
+
+---
+
+## Signal categories
+
+| Category | Core question |
+|----------|---------------|
+| Task Framing | Does the candidate understand the problem before acting? |
+| Delegation Quality | Does the candidate give AI clear, well-scoped instructions? |
+| Steering & Recovery | Does the candidate intervene when things drift or fail? |
+| Validation Strategy | Does the candidate verify that the work is correct? |
+| Risk Calibration | Does the candidate recognize and document important decisions? |
+| Engineering Judgment | Are the candidate's decisions and code changes sound? |
+| Execution Profile | What is the shape and rhythm of the session? |
+
+---
+
+## Key signals
+
+### `prompt_depth`
+
+**Category**: Delegation Quality
+
+Evaluates the quality of prompts beyond simple classification. An LLM judge analyzes each prompt for domain knowledge, decomposition ability, edge case awareness, constraint specification, and codebase grounding.
+
+**Value**: 0.0–2.0
+
+High scores indicate prompts that demonstrate understanding of the codebase, break down complex asks, set explicit boundaries, and reference relevant concepts. Low scores indicate vague or context-free prompts.
+
+When no LLM is available, the signal falls back to a heuristic based on prompt length, presence of file paths, and constraint language.
+
+---
+
+### `decision_visibility`
+
+**Category**: Risk Calibration
+
+Measures the ratio of high-significance decisions that were captured versus missed. A candidate who documents important architectural choices as they make them scores higher than one who makes the same choices silently.
+
+**Value**: 0.0–1.0 (`captured high-significance decisions / total high-significance decisions`)
+
+A value of `1.0` means every high-significance decision was explicitly documented. A value below `0.5` indicates that Promptster detected more significant decisions than the candidate surfaced themselves.
+
+---
+
+### `verification_intensity`
+
+**Category**: Validation Strategy
+
+Measures the ratio of verification commands (tests, lint, type checks, builds) to file changes. A candidate who runs tests after every change scores higher than one who verifies only at the end — or not at all.
+
+**Value**: raw ratio (command events / file diff events)
+
+The signal also breaks down commands by type: `test`, `lint`, `build`, and `other`. Use the breakdown to understand *how* the candidate verified their work, not just whether they did.
+
+---
+
+### `error_recovery_pattern`
+
+**Category**: Steering & Recovery
+
+Analyzes what the candidate does after a command fails. For each error episode, the signal classifies the first recovery action as a **hypothesis** (new approach), **retry** (same command again), **pivot** (different command or change), or **unrelated** (ignored the failure).
+
+The signal also detects **stuck loops** — sequences of three or more similar prompts with no meaningful progress between them.
+
+**Value**: 0.0–1.0 (fraction of error episodes with a hypothesis or pivot as the first recovery action; stuck loops reduce the score)
+
+A high value indicates methodical, adaptive recovery. A low value — especially combined with detected stuck loops — indicates the candidate may struggle to diagnose and escape dead ends.
+
+---
+
+### `planning_before_acting`
+
+**Category**: Task Framing
+
+Measures whether the candidate oriented themselves before making their first file change. The signal looks at the distribution of prompt types (strategic vs. reactive) in the window before the first `file_diff` event.
+
+**Value**: 0.0–1.0 (ratio of strategic or tactical prompts before the first file change)
+
+A high value suggests the candidate spent time understanding the problem before writing code. Note that some tasks genuinely require no planning — treat low values in short or simple sessions with appropriate context.
+
+---
+
+### `code_craft`
+
+**Category**: Engineering Judgment
+
+An LLM evaluation of file changes for code quality signals: naming clarity, simplification (removing dead code, reducing complexity), and defensive coding (error handling, type tightening, edge case coverage).
+
+**Value**: 0.0–2.0
+
+The signal evaluates the *output* regardless of who generated it — accepting well-crafted AI output is fine. What it measures is whether the candidate left the code better than they found it.
+
+---
+
+## Signal confidence levels
+
+Every signal carries a confidence level that indicates how much weight to give it for this session.
+
+| Confidence | Meaning |
+|------------|---------|
+| `high` | Signal is reliable for this session |
+| `moderate` | Signal is available but with caveats (e.g. few data points) |
+| `low` | Fallback heuristic was used — LLM evaluation was not available |
+| `insufficient_data` | Not enough events in the session to compute the signal |
+
+When a signal has `insufficient_data` confidence, it does not mean the candidate performed poorly — it means there was not enough telemetry to evaluate that dimension. This is common in short sessions or sessions where the tool did not capture certain event types.

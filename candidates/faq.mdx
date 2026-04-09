@@ -1,0 +1,61 @@
+---
+title: "FAQ"
+description: "Common questions from candidates about Promptster assessments."
+---
+
+<AccordionGroup>
+  <Accordion title="Do I need to install anything?">
+    Yes — the Promptster CLI. Run this one command:
+
+    ```bash
+    curl -fsSL https://get.promptster.ai | sh
+    ```
+
+    If you prefer not to use the installer script, you can install directly via npm:
+
+    ```bash
+    npm install -g @promptster/cli
+    ```
+  </Accordion>
+
+  <Accordion title="Does Promptster work with my AI coding tool?">
+    Promptster supports Claude Code and Cursor. After installing the CLI, run `promptster doctor` to verify your setup is configured correctly.
+  </Accordion>
+
+  <Accordion title="What if I prefer not to use AI?">
+    That's fine. Promptster captures what happens in your session. If you don't use AI tools, there will simply be fewer events recorded — that's not penalized.
+  </Accordion>
+
+  <Accordion title="Can I pause and resume my assessment?">
+    Yes. Your session stays open until you run `promptster done`. You can stop and restart your AI tool at any point without losing data.
+  </Accordion>
+
+  <Accordion title="What happens if I lose my internet connection?">
+    The CLI buffers events locally and retries automatically. You won't lose data during brief disconnections.
+  </Accordion>
+
+  <Accordion title="What does `promptster done` do exactly?">
+    It flushes any buffered events, posts a `session_end` event, and marks your candidate key as completed. The hiring team is notified automatically.
+  </Accordion>
+
+  <Accordion title="How long is my assessment key valid?">
+    Keys expire after the period set by the hiring team — typically 7 days from when they were sent to you. Run `promptster brief` to see how much time you have remaining.
+  </Accordion>
+
+  <Accordion title="Do I have to document my decisions?">
+    You're encouraged to, but not strictly required. Architecture decision rationale is one of the highest-signal parts of the assessment. Run `promptster explain` to document your thinking at any point during the session.
+  </Accordion>
+
+  <Accordion title="Can I see my own session data?">
+    Not directly via the CLI. You can ask the hiring team to share your session details with you.
+  </Accordion>
+
+  <Accordion title="My hooks didn't install — what do I do?">
+    Run `promptster doctor` to diagnose the issue. Common fixes:
+
+    - Restart Claude Code or Cursor after running `promptster start`
+    - Re-run `promptster start` from inside your project directory
+
+    If the issue persists, check that you ran `promptster start` in the correct task root directory.
+  </Accordion>
+</AccordionGroup>

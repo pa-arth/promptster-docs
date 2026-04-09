@@ -1,0 +1,186 @@
+---
+title: "Quick start"
+description: "Create your first assessment and review a candidate session in minutes."
+---
+
+  <Note>
+    For API access, use your API token (obtained from the dashboard under Settings → API Keys) in the `Authorization: Bearer` header. See [Authentication](/reviewers/api/authentication) for details.
+  </Note>
+
+<Steps>
+  <Step title="Sign in to Promptster">
+    Sign in at [promptster.ai](https://promptster.ai) using your organization account. You can sign in via SSO or email.
+
+    To get your API token, go to **Settings → API Keys** in the dashboard and copy your token.
+  </Step>
+
+  <Step title="Create an assessment">
+    Post your task definition. The `taskBrief` describes what the candidate should build.
+
+    ```bash
+    curl -X POST https://api.promptster.ai/v1/assessments \
+      -H "Authorization: Bearer <your-clerk-token>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "title": "Backend API Task",
+        "role": "Senior Backend Engineer",
+        "taskBrief": "Build a REST endpoint that accepts webhook events and persists them to a database.",
+        "timeLimitMinutes": 120,
+        "expiresInDays": 7
+      }'
+    ```
+
+    The response includes the new assessment's `id`. Save it — you'll need it to generate keys and retrieve sessions.
+
+    ```json
+    {
+      "assessment": {
+        "id": "asmnt_01j...",
+        "title": "Backend API Task",
+        "role": "Senior Backend Engineer",
+        "timeLimitMinutes": 120,
+        "expiresInDays": 7
+      }
+    }
+    ```
+
+    <Tip>
+      You can generate up to 50 candidate keys per assessment. Set `expiresInDays` to control how long a key remains valid after generation — after expiry, the key cannot be redeemed.
+    </Tip>
+  </Step>
+
+  <Step title="Generate candidate keys">
+    Generate one key per candidate. If you include `candidateEmails`, Promptster sends invite emails automatically.
+
+    ```bash
+    curl -X POST https://api.promptster.ai/v1/assessments/<assessment-id>/keys \
+      -H "Authorization: Bearer <your-clerk-token>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "count": 3,
+        "candidateEmails": ["alice@example.com", "bob@example.com", "carol@example.com"],
+        "candidateNames": ["Alice", "Bob", "Carol"],
+        "orgName": "Acme Corp"
+      }'
+    ```
+
+    The response contains the generated keys. Each key has the format `PST-XXXX-XXXX`.
+
+    ```json
+    {
+      "keys": [
+        { "id": "ck_01j...", "key": "PST-A3BZ-Q7NP", "candidateEmail": "alice@example.com", "expiresAt": "2026-04-14T..." },
+        { "id": "ck_01j...", "key": "PST-R2CW-H5MK", "candidateEmail": "bob@example.com",   "expiresAt": "2026-04-14T..." },
+        { "id": "ck_01j...", "key": "PST-T8DV-J4XL", "candidateEmail": "carol@example.com", "expiresAt": "2026-04-14T..." }
+      ]
+    }
+    ```
+
+    <Note>
+      `candidateEmails` and `candidateNames` are optional and positional — the first email is paired with the first name. If you omit them, keys are generated without any candidate association and no email is sent.
+    </Note>
+  </Step>
+
+  <Step title="Candidates complete the assessment">
+    Share the `PST-XXXX-XXXX` key with each candidate. They install the Promptster CLI and run:
+
+    ```bash
+    promptster start PST-XXXX-XXXX
+    ```
+
+    This configures Claude Code or Cursor to capture session telemetry automatically. The candidate works normally and runs `promptster done` to submit when finished.
+  </Step>
+
+  <Step title="List sessions for your assessment">
+    Once a candidate submits, their session appears in the list.
+
+    ```bash
+    curl "https://api.promptster.ai/v1/sessions?assessmentId=<assessment-id>" \
+      -H "Authorization: Bearer <your-clerk-token>"
+    ```
+
+    The response is a paginated list of sessions. Each session includes summary fields like `eventCount`, `decisionFlagCount`, and `aiAttributionPct`.
+
+    ```json
+    {
+      "sessions": [
+        {
+          "id": "sess_01j...",
+          "startedAt": "2026-04-07T10:00:00Z",
+          "endedAt": "2026-04-07T11:47:23Z",
+          "eventCount": 342,
+          "decisionFlagCount": 4,
+          "aiAttributionPct": 0.71
+        }
+      ],
+      "total": 1,
+      "limit": 20,
+      "offset": 0
+    }
+    ```
+  </Step>
+
+  <Step title="Review the session timeline">
+    Fetch the full chronological event log for a session. The timeline returns events in order, paginated by `limit` (max 2000 per request).
+
+    ```bash
+    curl "https://api.promptster.ai/v1/sessions/<session-id>/timeline" \
+      -H "Authorization: Bearer <your-clerk-token>"
+    ```
+
+    Use the `after` cursor for subsequent pages:
+
+    ```bash
+    curl "https://api.promptster.ai/v1/sessions/<session-id>/timeline?after=<last-event-id>" \
+      -H "Authorization: Bearer <your-clerk-token>"
+    ```
+
+    The response includes a `hasMore` flag indicating whether additional pages exist.
+  </Step>
+
+  <Step title="Review decisions">
+    Fetch the architecture decisions the candidate captured during the session.
+
+    ```bash
+    curl "https://api.promptster.ai/v1/sessions/<session-id>/decisions" \
+      -H "Authorization: Bearer <your-clerk-token>"
+    ```
+
+    Each decision is a `decision_event` timeline row with the candidate's choice, rationale, and tradeoffs.
+
+    ```json
+    {
+      "decisions": [
+        {
+          "id": "evt_01j...",
+          "kind": "decision_event",
+          "ts": "2026-04-07T10:22:41Z",
+          "data": {
+            "title": "Use a message queue for webhook ingestion",
+            "chosenOption": "HTTP push queue",
+            "rationale": "Avoids polling, no extra infrastructure required. Simpler ops footprint.",
+            "impactScore": 4
+          }
+        }
+      ]
+    }
+    ```
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Session review" icon="list" href="/reviewers/sessions/overview">
+    Understand the full session data model and how to interpret signals.
+  </Card>
+  <Card title="Cohort stats" icon="chart-bar" href="/reviewers/assessments/cohort-stats">
+    Compare a candidate's metrics against the rest of the cohort.
+  </Card>
+  <Card title="Manage assessments" icon="folder" href="/reviewers/assessments/create">
+    Full reference for assessment and key management.
+  </Card>
+  <Card title="API reference" icon="code" href="/reviewers/api/assessments">
+    Complete API reference for all reviewer endpoints.
+  </Card>
+</CardGroup>

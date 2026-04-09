@@ -1,0 +1,81 @@
+---
+title: "Introduction"
+description: "How Promptster helps hiring teams evaluate engineering candidates objectively."
+---
+
+Traditional take-home assessments only show you the final code. Promptster captures a complete telemetry record of a candidate's AI coding session so you can evaluate **how they work**, not just what they built.
+
+## The problem with final output
+
+When you evaluate a take-home project, you see the finished artifact — not the thinking behind it. Two candidates may submit similar-looking code, yet one carefully validated each step, documented key tradeoffs, and caught errors quickly, while the other brute-forced their way through with no understanding of why the solution works.
+
+Promptster closes this gap. By capturing the session in real time, you get a chronological record of the candidate's planning, prompting behavior, decision-making, and verification habits.
+
+## Key concepts
+
+**Assessment**
+
+A task definition you create. It includes a title, role, task brief, and optional time limit. Candidates receive access to your assessment through candidate keys.
+
+**Candidate key**
+
+A one-time access code in the format `PST-XXXX-XXXX`. Each key links a specific candidate to an assessment. When a candidate runs `promptster start PST-XXXX-XXXX`, the key is redeemed and a session begins. Keys can expire — you set the expiry window when generating them.
+
+**Session**
+
+The telemetry record of a candidate's work. A session is created when the candidate starts, and closed when they submit. It contains the raw event stream as well as derived artifacts.
+
+**Timeline**
+
+The chronological event log of everything captured during the session: prompts sent to the AI, file diffs, shell commands, test runs, and architecture decisions. The timeline is the authoritative record — all other artifacts are derived from it.
+
+**Decisions**
+
+Architecture choices the candidate explicitly documented during the session. When a candidate uses the Promptster MCP `capture_decision` tool, it records the choice, the rationale, and the tradeoffs considered. Decisions give you structured insight into engineering judgment without requiring the candidate to write a separate document.
+
+**Signals**
+
+Derived metrics computed from the timeline that evaluate specific aspects of the candidate's process:
+
+| Signal | What it measures |
+|--------|-----------------|
+| `promptCount` | Total prompts sent to the AI model |
+| `verifyIntensity` | How often the candidate tested or validated output relative to changes made |
+| `commandFailRate` | Ratio of failed shell commands — a signal of how carefully commands are constructed |
+| `manualEditRatio` | Fraction of file changes made by hand vs. accepted from AI suggestions |
+| `firstChangeLatencyMs` | Time from session start to first file edit — reflects planning behavior |
+| `aiAttributionPct` | Percentage of code changes attributable to AI-generated content |
+
+You can compare these signals across candidates in the same assessment using [cohort stats](/reviewers/assessments/cohort-stats).
+
+## How to get started
+
+<Steps>
+  <Step title="Create an assessment">
+    Define the task brief, role, and time limit for your position. See [Create an assessment](/reviewers/assessments/create).
+  </Step>
+  <Step title="Generate candidate keys">
+    Generate one key per candidate. Provide email addresses and Promptster sends invite emails automatically.
+  </Step>
+  <Step title="Send keys to candidates">
+    Candidates receive a `PST-XXXX-XXXX` key. They run `promptster start <key>` to begin.
+  </Step>
+  <Step title="Review sessions">
+    Once a candidate submits, browse their timeline, review captured decisions, and examine derived signals in the dashboard or via API.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/reviewers/quickstart">
+    Create your first assessment and review a session in minutes.
+  </Card>
+  <Card title="Session review" icon="list" href="/reviewers/sessions/overview">
+    Learn how to read the timeline and interpret signals.
+  </Card>
+  <Card title="Cohort stats" icon="chart-bar" href="/reviewers/assessments/cohort-stats">
+    Compare candidates across the same assessment with percentile rankings.
+  </Card>
+  <Card title="API reference" icon="code" href="/reviewers/api/authentication">
+    Integrate assessment management and session retrieval into your own tooling.
+  </Card>
+</CardGroup>

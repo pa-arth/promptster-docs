@@ -1,0 +1,106 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Promptster",
+  "theme": "sequoia",
+  "colors": {
+    "primary": "#F28C28",
+    "light": "#FBBF24",
+    "dark": "#D97706"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/pa-arth/promptster-backend"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Candidates",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "candidates/introduction",
+              "candidates/quickstart"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "candidates/cli/install",
+              "candidates/cli/commands",
+              "candidates/cli/decisions"
+            ]
+          },
+          {
+            "group": "Privacy & Data",
+            "pages": [
+              "candidates/privacy",
+              "candidates/faq"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hiring Teams",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "reviewers/introduction",
+              "reviewers/quickstart"
+            ]
+          },
+          {
+            "group": "Assessments",
+            "pages": [
+              "reviewers/assessments/create",
+              "reviewers/assessments/candidate-keys",
+              "reviewers/assessments/cohort-stats"
+            ]
+          },
+          {
+            "group": "Session Review",
+            "pages": [
+              "reviewers/sessions/overview",
+              "reviewers/sessions/timeline",
+              "reviewers/sessions/decisions",
+              "reviewers/sessions/signals"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "reviewers/api/authentication",
+              "reviewers/api/assessments",
+              "reviewers/api/sessions",
+              "reviewers/api/hooks",
+              "reviewers/api/branding"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "favicon": "/images/card.png",
+  "logo": "/images/card.png",
+  "fonts": {
+    "family": "Sora",
+    "weight": 500,
+    "heading": {
+      "family": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap  ",
+      "weight": 700
+    },
+    "body": {
+      "family": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap    ",
+      "weight": 500
+    }
+  },
+  "footer": {
+    "socials": {
+      "linkedin": "https://www.linkedin.com/company/promptster/",
+      "x": "https://x.com/paarthmj"
+    }
+  }
+}

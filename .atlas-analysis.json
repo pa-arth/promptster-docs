@@ -1,0 +1,112 @@
+{
+  "projectType": "saas",
+  "projectName": "Promptster",
+  "projectDescription": "An AI coding assessment platform that captures session telemetry from Claude Code and Cursor to help engineering teams evaluate candidates objectively.",
+  "theme": "luma",
+  "primaryColor": "#22c55e",
+  "lightColor": "#bbf7d0",
+  "darkColor": "#15803d",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Candidates",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "candidates/introduction",
+              "candidates/quickstart"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "candidates/cli/install",
+              "candidates/cli/commands",
+              "candidates/cli/decisions"
+            ]
+          },
+          {
+            "group": "Privacy & Data",
+            "pages": [
+              "candidates/privacy",
+              "candidates/faq"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hiring Teams",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "reviewers/introduction",
+              "reviewers/quickstart"
+            ]
+          },
+          {
+            "group": "Assessments",
+            "pages": [
+              "reviewers/assessments/create",
+              "reviewers/assessments/candidate-keys",
+              "reviewers/assessments/cohort-stats"
+            ]
+          },
+          {
+            "group": "Session Review",
+            "pages": [
+              "reviewers/sessions/overview",
+              "reviewers/sessions/timeline",
+              "reviewers/sessions/decisions",
+              "reviewers/sessions/signals"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "reviewers/api/authentication",
+              "reviewers/api/assessments",
+              "reviewers/api/sessions",
+              "reviewers/api/hooks"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Automated telemetry capture from Claude Code and Cursor via hooks and MCP",
+    "Candidate key system for distributing and tracking assessments",
+    "Decision capture — candidates document architecture rationale in real time",
+    "Derived signals that evaluate prompt depth, verification intensity, error recovery, and more",
+    "Session timeline with immutable event log for reviewer auditing",
+    "Cohort statistics and percentile rankings across assessment sessions",
+    "CLI tools: start, done, explain, status, doctor",
+    "Dual authentication: Clerk JWT for reviewers, API keys for candidates"
+  ],
+  "publicApiSurface": [
+    "POST /v1/hooks/ingest",
+    "POST /v1/sessions",
+    "GET /v1/sessions",
+    "GET /v1/sessions/:id",
+    "GET /v1/sessions/:id/timeline",
+    "GET /v1/sessions/:id/decisions",
+    "POST /v1/assessments",
+    "GET /v1/assessments",
+    "GET /v1/assessments/:id",
+    "POST /v1/assessments/:id/keys",
+    "GET /v1/assessments/:id/keys",
+    "GET /v1/assessments/:id/cohort-stats",
+    "GET /v1/candidates",
+    "GET /health",
+    "promptster start <key>",
+    "promptster done",
+    "promptster explain",
+    "promptster status",
+    "promptster brief",
+    "promptster doctor",
+    "MCP tool: capture_decision",
+    "MCP tool: decision_policy"
+  ]
+}

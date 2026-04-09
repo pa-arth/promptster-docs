@@ -1,0 +1,198 @@
+---
+title: "Create Assessments"
+description: "Create and manage coding assessments for your candidates."
+---
+
+## Creating an assessment
+
+`POST /v1/assessments`
+
+Creates a new assessment for your organization. You must provide either a `taskBrief` or an `issueId` — if you supply an `issueId`, the task brief is auto-populated from the linked OSS issue.
+
+### Request body
+
+<ParamField body="title" type="string" required>
+  Assessment name shown to candidates and in your dashboard.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  The role being assessed, e.g. `"Senior Backend Engineer"`.
+</ParamField>
+
+<ParamField body="taskBrief" type="string">
+  The task description candidates receive when they start their session. Required unless `issueId` is provided.
+</ParamField>
+
+<ParamField body="repoUrl" type="string">
+  URL of the repository candidates will work in during the assessment.
+</ParamField>
+
+<ParamField body="timeLimitMinutes" type="integer">
+  Time limit in minutes. If omitted, no time limit is enforced.
+</ParamField>
+
+<ParamField body="expiresInDays" type="integer" default="7">
+  How many days from key generation before candidate keys expire. Defaults to `7`.
+</ParamField>
+
+<ParamField body="issueId" type="string">
+  ID of a pre-configured OSS issue task. When provided, `taskBrief` is auto-populated from the issue. Takes precedence over any `taskBrief` you supply.
+</ParamField>
+
+<ParamField body="rubricId" type="string">
+  UUID of a scoring rubric to link to this assessment. Rubric criteria are used when scoring completed sessions.
+</ParamField>
+
+### Example request
+
+```bash
+curl -X POST https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Backend API Challenge",
+    "role": "Senior Backend Engineer",
+    "taskBrief": "Build a webhook ingestion endpoint that validates, stores, and deduplicates incoming events.",
+    "timeLimitMinutes": 120,
+    "expiresInDays": 7
+  }'
+```
+
+### Example response
+
+Returns `201 Created` with the created assessment object.
+
+```json
+{
+  "assessment": {
+    "id": "01234567-89ab-cdef-0123-456789abcdef",
+    "orgId": "org_abc123",
+    "title": "Backend API Challenge",
+    "role": "Senior Backend Engineer",
+    "taskBrief": "Build a webhook ingestion endpoint that validates, stores, and deduplicates incoming events.",
+    "repoUrl": null,
+    "timeLimitMinutes": 120,
+    "expiresInDays": 7,
+    "issueId": null,
+    "rubricId": null,
+    "createdAt": "2026-04-01T10:00:00Z",
+    "updatedAt": "2026-04-01T10:00:00Z"
+  }
+}
+```
+
+### Response fields
+
+<ResponseField name="assessment.id" type="string">
+  UUID that uniquely identifies the assessment. Use this when generating candidate keys or retrieving results.
+</ResponseField>
+
+<ResponseField name="assessment.orgId" type="string">
+  Your organization ID.
+</ResponseField>
+
+<ResponseField name="assessment.title" type="string">
+  Assessment name.
+</ResponseField>
+
+<ResponseField name="assessment.role" type="string">
+  The role being assessed.
+</ResponseField>
+
+<ResponseField name="assessment.taskBrief" type="string">
+  Task description shown to candidates.
+</ResponseField>
+
+<ResponseField name="assessment.repoUrl" type="string | null">
+  Repository URL, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="assessment.timeLimitMinutes" type="integer | null">
+  Time limit in minutes, or `null` if no limit is set.
+</ResponseField>
+
+<ResponseField name="assessment.expiresInDays" type="integer">
+  Days from key generation until candidate keys expire.
+</ResponseField>
+
+<ResponseField name="assessment.issueId" type="string | null">
+  Linked OSS issue ID, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="assessment.rubricId" type="string | null">
+  Linked rubric UUID, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="assessment.createdAt" type="string">
+  ISO 8601 timestamp of when the assessment was created.
+</ResponseField>
+
+<ResponseField name="assessment.updatedAt" type="string">
+  ISO 8601 timestamp of the last update.
+</ResponseField>
+
+---
+
+## Listing assessments
+
+`GET /v1/assessments`
+
+Returns all active (non-deleted) assessments for your organization, ordered by creation date. Each assessment includes an `issue` field containing the linked OSS issue details, or `null` if no issue is linked.
+
+```bash
+curl https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer <your-token>"
+```
+
+```json
+{
+  "assessments": [
+    {
+      "id": "01234567-89ab-cdef-0123-456789abcdef",
+      "orgId": "org_abc123",
+      "title": "Backend API Challenge",
+      "role": "Senior Backend Engineer",
+      "taskBrief": "Build a webhook ingestion endpoint...",
+      "timeLimitMinutes": 120,
+      "expiresInDays": 7,
+      "issueId": null,
+      "rubricId": null,
+      "createdAt": "2026-04-01T10:00:00Z",
+      "updatedAt": "2026-04-01T10:00:00Z",
+      "issue": null
+    }
+  ]
+}
+```
+
+---
+
+## Getting a single assessment
+
+`GET /v1/assessments/:id`
+
+Returns a single assessment by ID. The response includes an `issue` field with full OSS issue details if the assessment was created with an `issueId`.
+
+```bash
+curl https://api.promptster.ai/v1/assessments/01234567-89ab-cdef-0123-456789abcdef \
+  -H "Authorization: Bearer <your-token>"
+```
+
+---
+
+## Deleting an assessment
+
+`DELETE /v1/assessments/:id`
+
+Soft-deletes the assessment and all of its candidate keys. Deleted assessments no longer appear in listings.
+
+```bash
+curl -X DELETE https://api.promptster.ai/v1/assessments/01234567-89ab-cdef-0123-456789abcdef \
+  -H "Authorization: Bearer <your-token>"
+```
+
+Returns `{ "ok": true, "id": "<assessment-id>" }` on success.
+
+<Warning>
+  Deleting an assessment also deactivates all candidate keys for that assessment. In-progress sessions are not affected, but candidates with unused keys will no longer be able to start.
+</Warning>

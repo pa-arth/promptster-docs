@@ -1,0 +1,36 @@
+---
+title: "Introduction"
+description: "What Promptster is, why companies use it, and what to expect as a candidate."
+---
+
+Promptster is a lightweight CLI tool that runs alongside your AI coding tool during a technical assessment. It captures a telemetry record of your session — the prompts you write, the changes the AI makes, and the decisions you explain — so the hiring team can evaluate how you work, not just the code you submit.
+
+## Why companies use Promptster
+
+Final code output is a poor signal on its own. Two candidates can produce similar results through very different processes. Promptster gives hiring teams an objective evidence trail of engineering judgment: how you break down a problem, what tradeoffs you consider, and how you direct an AI tool toward a goal.
+
+You are not being judged on whether you use AI. You are being judged on how well you use it.
+
+## What the experience is like
+
+You work normally. Open your preferred AI coding tool (Claude Code or Cursor), follow the task brief, and write code as you usually would. Promptster runs in the background — you do not need to interact with it while you work.
+
+The only exception is **decision capture**: when you make a significant architecture or tradeoff decision, you can run `promptster explain` to record your rationale in your own words. This is one of the most valuable signals a reviewer sees.
+
+## Key concepts
+
+| Term | What it means |
+|------|---------------|
+| **Assessment key** | A one-time code in `PST-XXXX-XXXX` format, sent to you by email from the hiring team. You use it to start your session. |
+| **Session** | The active capture window from the moment you run `promptster start` until you run `promptster done`. |
+| **Decision** | An architecture or tradeoff choice you document using `promptster explain`. Reviewers read these alongside the code changes. |
+
+## What is and is not recorded
+
+Promptster only records activity inside your AI coding tool session. It does not record keystrokes, clipboard contents, browser activity, or any file you never ask the AI to touch. See [Privacy & Data](/candidates/privacy) for the complete list.
+
+## Ready to begin?
+
+<Card title="Quick Start" icon="rocket" href="/candidates/quickstart">
+  Install the CLI, redeem your key, and start your assessment in under 5 minutes.
+</Card>

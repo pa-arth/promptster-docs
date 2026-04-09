@@ -1,0 +1,45 @@
+---
+title: "Welcome to Promptster"
+description: "Objective AI coding assessments — capture real session telemetry to evaluate how candidates work, not just what they build."
+---
+
+Promptster runs alongside Claude Code and Cursor during a coding assessment, capturing a detailed telemetry record of the session: prompts, file changes, commands, test runs, and architecture decisions. Hiring teams get an objective evidence trail to evaluate engineering judgment — not just final output.
+
+<CardGroup cols={2}>
+  <Card title="Candidate Quickstart" icon="rocket" href="/candidates/quickstart">
+    Install the CLI, redeem your key, and start your assessment in under 5 minutes.
+  </Card>
+  <Card title="Hiring Team Quickstart" icon="users" href="/reviewers/quickstart">
+    Create your first assessment and generate candidate keys in minutes.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/candidates/cli/commands">
+    All Promptster CLI commands for candidates — start, submit, explain, and more.
+  </Card>
+  <Card title="API Reference" icon="code" href="/reviewers/api/authentication">
+    REST API for managing assessments, sessions, and reviewing candidate data.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Hiring team creates an assessment">
+    Define the task brief, role, and time limit. Generate candidate keys to distribute.
+  </Step>
+  <Step title="Candidate redeems their key">
+    Run `promptster start PST-XXXX-XXXX`. The CLI configures Claude Code or Cursor to capture session telemetry automatically.
+  </Step>
+  <Step title="Candidate completes the task">
+    Work normally using AI coding tools. Promptster captures prompts, file diffs, commands, and architecture decisions in the background.
+  </Step>
+  <Step title="Candidate submits">
+    Run `promptster done` to flush all events and close the session.
+  </Step>
+  <Step title="Hiring team reviews">
+    Browse the session timeline, review captured decisions, and examine derived signals to evaluate engineering judgment.
+  </Step>
+</Steps>
+
+<Note>
+  Promptster only captures what happens inside your AI coding tool session. Keystrokes, clipboard contents, browser activity, and environment variables are never recorded. See [Privacy & Data](/candidates/privacy) for the full list.
+</Note>

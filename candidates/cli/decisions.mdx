@@ -1,0 +1,91 @@
+---
+title: "Decisions"
+description: "How to document your architecture decisions during a Promptster assessment."
+---
+
+Promptster captures not just *what* you built, but *why* you made the tradeoffs you did. Decision capture is one of the highest-signal parts of the assessment — reviewers can see your reasoning alongside the code and session timeline.
+
+## How decision capture works
+
+During your session, Promptster detects when you make significant architectural choices and records them as **decision events**. Each decision event can carry a rationale — your explanation of the tradeoffs and the option you chose.
+
+There are two ways decisions are captured:
+
+### Automatic capture via the MCP server
+
+When you use Claude Code or Cursor with the Promptster MCP server (installed automatically by `promptster start`), the AI coding tool calls `capture_decision` for high-impact choices. This happens in the background without any action on your part.
+
+Each captured decision has an **impact score** from 1 to 5:
+
+| Score | Meaning |
+|-------|---------|
+| 1 | Local, reversible implementation detail |
+| 2 | Low-impact team or local choice |
+| 3 | Meaningful architectural tradeoff |
+| 4 | High-blast-radius or hard-to-reverse design decision |
+| 5 | Foundational decision affecting reliability, cost, security, or delivery |
+
+Decisions with a score of 3 or higher are queued for rationale by default — Promptster expects you to explain your reasoning for them.
+
+### Manual capture with `promptster explain`
+
+Run `promptster explain` at any point to open the decision TUI and document your rationale for recent work:
+
+```bash
+promptster explain
+```
+
+Use `--last` to broaden the activity window:
+
+```bash
+promptster explain --last 30m
+```
+
+The CLI fetches a summary of your recent activity (files changed, commands run) and displays it for context, then opens a multi-line editor for your rationale.
+
+```
+╭─────────────────────────────────────────────────────────────────────╮
+│ Recent Activity (last 20 min)                                       │
+│                                                                     │
+│ Added payment webhook handler and updated the database schema to    │
+│ support idempotency keys.                                           │
+│                                                                     │
+│ Files changed:                                                      │
+│   src/routes/webhooks.ts                                            │
+│   packages/db/src/schema.ts                                         │
+│   src/__tests__/webhooks.test.ts                                    │
+╰─────────────────────────────────────────────────────────────────────╯
+
+What decisions did you make and why?
+
+┌────────────────────────────────────────────────────────────┐
+│ Explain your reasoning: what did you decide and why?       │
+│                                                            │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+
+Ctrl+D submit  ·  Esc cancel
+```
+
+Press **Ctrl+D** to submit your rationale or **Esc** to cancel. Your rationale is sent to the backend as a `decision_event` and becomes part of your session record.
+
+You can also pass rationale directly as an argument to skip the TUI:
+
+```bash
+promptster explain "used idempotency keys on the webhook handler to handle Stripe retries safely — the alternative was deduplication in application logic but that requires a distributed lock"
+```
+
+## Before you submit
+
+`promptster done` checks for queued decisions that have no rationale. If any exist, it will refuse to proceed and tell you how many are outstanding:
+
+```
+error: 2 queued decision(s) still need rationale.
+Finish them with `promptster explain` before running `promptster done`.
+```
+
+Run `promptster explain` to clear the queue, then run `promptster done` again.
+
+<Tip>
+  You don't need to document every decision — focus on the meaningful architectural tradeoffs where you weighed options.
+</Tip>

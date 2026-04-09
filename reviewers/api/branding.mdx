@@ -1,0 +1,74 @@
+---
+title: "Branding API"
+description: "Manage your organization's branding settings and data retention policy."
+---
+
+All endpoints require reviewer authentication. See [Authentication](/reviewers/api/authentication).
+
+---
+
+## Get branding settings
+
+`GET /v1/org/branding`
+
+Returns the current branding configuration for your organization, including the maximum retention period allowed by your plan.
+
+**Response**
+
+```json
+{
+  "logoUrl": "https://example.com/logo.png",
+  "accentColor": "#F28C28",
+  "retentionDays": 30,
+  "maxRetentionDays": 90,
+  "plan": "growth"
+}
+```
+
+<ResponseField name="logoUrl" type="string | null">
+  URL of your organization's logo. `null` if not set.
+</ResponseField>
+
+<ResponseField name="accentColor" type="string | null">
+  Hex color code for your organization's accent color. `null` if not set.
+</ResponseField>
+
+<ResponseField name="retentionDays" type="integer" default="30">
+  Number of days session data is retained. Defaults to `30`.
+</ResponseField>
+
+<ResponseField name="maxRetentionDays" type="integer">
+  Maximum retention days allowed by your current plan. Varies by plan: `30` for Starter, `90` for Growth, `365` for Business.
+</ResponseField>
+
+<ResponseField name="plan" type="string">
+  Your organization's current plan (`starter`, `growth`, `business`, or `none`).
+</ResponseField>
+
+---
+
+## Update branding settings
+
+`PUT /v1/org/branding`
+
+Updates your organization's branding configuration. Requires an active subscription. All fields are optional — only provided fields are updated.
+
+**Request body**
+
+<ParamField body="logoUrl" type="string | null">
+  URL of your organization's logo. Pass `null` to remove.
+</ParamField>
+
+<ParamField body="accentColor" type="string | null">
+  Hex color code for your accent color. Pass `null` to remove.
+</ParamField>
+
+<ParamField body="retentionDays" type="integer">
+  Number of days to retain session data. Cannot exceed `maxRetentionDays` for your plan.
+</ParamField>
+
+**Responses**
+
+- `200` — Settings updated. Returns the updated branding object (same shape as the GET response).
+- `400` — Invalid request body, or `retentionDays` exceeds the plan limit. Error message includes the maximum allowed value.
+- `402` — Subscription inactive or trial expired.

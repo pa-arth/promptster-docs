@@ -1,0 +1,55 @@
+---
+title: "Install"
+description: "Install the Promptster CLI on macOS, Linux, or Windows (WSL)."
+---
+
+The Promptster CLI is a single binary that configures your editor hooks, manages your session, and submits your assessment when you're done.
+
+## System requirements
+
+- **macOS** (Intel or Apple Silicon), **Linux** (x64 or arm64), or **Windows via WSL**
+- `curl` or `wget` (for the install script)
+- Node.js is **not** required for the script install
+
+## Install
+
+<Tabs>
+  <Tab title="Install script (recommended)">
+    Run the install script to download a pre-built binary directly to `~/.promptster/bin/promptster`:
+
+    ```bash
+    curl -fsSL https://get.promptster.ai | sh
+    ```
+
+    The script detects your OS and architecture, downloads the correct binary, and adds `~/.promptster/bin` to your shell profile (`.zshrc` or `.bashrc`).
+
+    <Note>
+      After install, restart your shell or run the export line the installer prints to make `promptster` available in your current session.
+    </Note>
+  </Tab>
+  <Tab title="npm">
+    If you already have Node.js installed, you can install via npm:
+
+    ```bash
+    npm install -g @promptster/cli
+    ```
+  </Tab>
+</Tabs>
+
+## Verify the install
+
+```bash
+promptster version
+```
+
+You should see a version string like `1.2.3`. If the command is not found, make sure `~/.promptster/bin` is in your `PATH`:
+
+```bash
+export PATH="$HOME/.promptster/bin:$PATH"
+```
+
+Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent.
+
+## Keeping the CLI up to date
+
+You don't need to update manually. Every time you run `promptster start`, the CLI checks for a newer version and upgrades itself automatically.

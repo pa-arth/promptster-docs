@@ -1,0 +1,55 @@
+---
+title: "Authentication"
+description: "How to authenticate API requests to Promptster."
+---
+
+Promptster uses two authentication methods depending on the actor making the request.
+
+## Reviewer authentication
+
+Used for all hiring team and reviewer operations — managing assessments, listing sessions, and reviewing candidates.
+
+Obtain your API token from the Promptster dashboard under **Settings → API Keys**.
+
+Pass it as a `Bearer` token in the `Authorization` header:
+
+```bash
+curl https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."
+```
+
+<Note>
+  Reviewer tokens are scoped to your organization. You can only access assessments, sessions, and candidates that belong to your org.
+</Note>
+
+<Tip>
+  For programmatic integrations (scripts, CI), use a dedicated API key rather than a personal session token.
+</Tip>
+
+## Candidate authentication (API Key)
+
+Candidates authenticate via their candidate key (`PST-XXXX-XXXX`), which the Promptster CLI uses automatically. If you are building custom integrations that send events on behalf of candidates, pass the key in the `X-API-Key` header:
+
+```bash
+curl -X POST https://api.promptster.ai/v1/hooks/ingest \
+  -H "X-API-Key: PST-XXXX-XXXX" \
+  -H "Content-Type: application/json" \
+  -d '{...}'
+```
+
+A candidate key must be active and not expired to be accepted. Keys are validated on every request.
+
+## Base URL
+
+```
+https://api.promptster.ai
+```
+
+## Error responses
+
+| Status | Meaning |
+|--------|---------|
+| `401 Unauthorized` | Missing or invalid token/key — check that the header is present and the value has not expired |
+| `403 Forbidden` | Token is valid but does not have access to the requested resource (wrong org, deleted assessment, etc.) |
+| `402 Payment Required` | Your subscription is inactive or your trial has expired |
+| `429 Too Many Requests` | Rate limit exceeded — the event ingest endpoint allows 100 requests per minute per API key |

@@ -1,0 +1,91 @@
+---
+title: "Decisions"
+description: "Review the architecture decisions a candidate documented during their session."
+---
+
+## What are decisions?
+
+When a candidate makes a significant architectural choice — switching a queue model, redesigning a schema, choosing between implementation approaches — Promptster captures their rationale as a `decision_event`. These are the highest-signal artifacts in a session.
+
+Unlike file diffs or commands, decisions represent the candidate's reasoning, not just their actions. They answer the question: does this candidate think about tradeoffs, or just implement the first idea that works?
+
+## Getting decisions for a session
+
+`GET /v1/sessions/:id/decisions`
+
+Returns all `decision_event` entries for the session, ordered by timestamp.
+
+```bash
+curl "https://api.promptster.ai/v1/sessions/SESSION_ID/decisions" \
+  -H "Authorization: Bearer <your-token>"
+```
+
+### Example response
+
+```json
+{
+  "decisions": [...]
+}
+```
+
+---
+
+## Decision event fields
+
+Each decision in the `decisions` array is a full timeline event. The event `data` payload contains:
+
+<ResponseField name="title" type="string">
+  Short description of the decision.
+</ResponseField>
+
+<ResponseField name="chosenOption" type="string">
+  What the candidate decided to do.
+</ResponseField>
+
+<ResponseField name="context" type="string">
+  Background and situation that prompted the decision.
+</ResponseField>
+
+<ResponseField name="tradeoffs" type="string">
+  What was given up or risked by choosing this option.
+</ResponseField>
+
+<ResponseField name="rationale" type="string">
+  The candidate's explanation of why they chose this option.
+</ResponseField>
+
+<ResponseField name="impactScore" type="integer">
+  Significance rating from 1 (minor) to 5 (major).
+</ResponseField>
+
+<ResponseField name="capturedVia" type="string">
+  How the decision was captured: `mcp` (via the Promptster MCP tool), `cli` (via `promptster explain`), or `async-decision-enrichment` (auto-detected and enriched after the session).
+</ResponseField>
+
+<ResponseField name="category" type="string">
+  Type of decision, e.g. `architecture`, `dependency`, `config`.
+</ResponseField>
+
+<ResponseField name="severity" type="string">
+  `high`, `medium`, or `low`.
+</ResponseField>
+
+<ResponseField name="missedDecision" type="boolean">
+  If `true`, Promptster auto-detected this as a significant decision that the candidate did not explicitly document. It has been flagged for follow-up.
+</ResponseField>
+
+---
+
+## What to look for
+
+**Decision count and significance** — did the candidate capture meaningful tradeoffs, or only trivial ones? A session with high-impact changes and zero decisions may indicate the candidate is not thinking about consequences.
+
+**Rationale quality** — is the reasoning substantive? "I chose Postgres because it's familiar" is thin. "I chose Postgres because this data is relational and we need strong consistency guarantees for the billing path; the tradeoff is schema rigidity if requirements change" is strong.
+
+**Missed decisions** — any decision with `missedDecision: true` was detected by Promptster but not explicitly documented by the candidate. These are worth probing in a follow-up interview.
+
+**Tradeoff awareness** — does the candidate acknowledge what they gave up? Recognizing that a choice has costs — even if the costs are acceptable — signals mature engineering judgment.
+
+<Tip>
+  Candidates using `promptster explain` can document decisions at any point during the session. High-quality rationale — acknowledging tradeoffs and reasoning about reversibility — is a strong positive signal.
+</Tip>

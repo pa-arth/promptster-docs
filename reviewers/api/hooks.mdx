@@ -1,0 +1,200 @@
+---
+title: "Hooks API"
+description: "Ingest telemetry events from AI coding tools into Promptster."
+---
+
+## Overview
+
+The hooks ingest endpoint receives telemetry events from the Promptster CLI and MCP server. This is the primary path through which session data enters Promptster. The CLI handles this automatically when a candidate runs `promptster start` — you only need to call this endpoint directly if you are building a custom integration.
+
+Each call to `POST /v1/hooks/ingest` delivers a single event. The server normalizes the event kind, upserts the session, appends the event to the timeline, and enqueues background analytics jobs.
+
+---
+
+## Ingest an event
+
+`POST /v1/hooks/ingest`
+
+**Authentication:** `X-API-Key` header with a valid candidate key (`PST-XXXX-XXXX`).
+
+**Rate limit:** 100 requests per minute per API key.
+
+<Note>
+  Sessions are created automatically on first event ingest. You do not need to create a session before sending events.
+</Note>
+
+### Event envelope
+
+<ParamField body="id" type="string (UUID)" required>
+  Stable event ID. Re-posting an event with the same `id` is safe — the duplicate is silently ignored (idempotent).
+</ParamField>
+
+<ParamField body="sessionId" type="string" required>
+  The session this event belongs to. Sessions are created on-demand the first time a new `sessionId` is seen.
+</ParamField>
+
+<ParamField body="ts" type="string (ISO-8601)" required>
+  Event timestamp, including timezone offset (e.g. `2026-04-01T10:15:00Z`).
+</ParamField>
+
+<ParamField body="kind" type="string" required>
+  Event type. See canonical kinds below.
+</ParamField>
+
+<ParamField body="source" type="object" required>
+  Metadata about where the event originated.
+
+  <Expandable title="source fields">
+    <ParamField body="source.channel" type="string">
+      Delivery channel. One of: `hook`, `cli`, `mcp`, `api`, `worker`, `import`, `ide-extension`, `terminal`, `unknown`.
+    </ParamField>
+    <ParamField body="source.integration" type="string">
+      Tool family (e.g. `claude-code`, `cursor`, `shell`, `git`). Max 128 characters.
+    </ParamField>
+    <ParamField body="source.emitter" type="string">
+      Concrete producer (e.g. `promptster-hook`, `promptster-cli`). Max 128 characters.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="actor" type="object">
+  The actor that triggered the event.
+
+  <Expandable title="actor fields">
+    <ParamField body="actor.type" type="string" default="unknown">
+      One of: `ai`, `human`, `system`, `unknown`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="provenance" type="object">
+  Attribution metadata for this event.
+
+  <Expandable title="provenance fields">
+    <ParamField body="provenance.attribution" type="string" default="unknown">
+      One of: `likely_ai`, `ai_revised_by_human`, `likely_human`, `mixed`, `system_generated`, `unknown`.
+    </ParamField>
+    <ParamField body="provenance.confidence" type="number" default="0.5">
+      Confidence score for the attribution. Between `0.0` and `1.0`.
+    </ParamField>
+    <ParamField body="provenance.observability" type="string" default="partial">
+      One of: `high`, `medium`, `partial`, `low`, `unknown`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="v" type="integer" required>
+  Schema version. Use `1`.
+</ParamField>
+
+<ParamField body="data" type="object" required>
+  Event-specific payload. Schema requirements vary by `kind` — see the table below.
+</ParamField>
+
+### Responses
+
+- `201` — Event accepted. Returns `{ ok: true, id: "<event-id>" }`.
+- `200` — Event was a duplicate (same `id` was already processed). Returns `{ ok: true, skipped: true }`.
+- `400` — Invalid event envelope or strict schema validation failed for the event `kind`.
+- `401` — Missing or invalid `X-API-Key`.
+- `429` — Rate limit exceeded (100 req/min per key).
+
+---
+
+## Canonical event kinds
+
+Every event you send must have a `kind` from this list. The `data` payload requirements differ by kind.
+
+<Warning>
+  Strict payload schemas are enforced for `command`, `file_diff`, `file_create`, `test_run`, `git_action`, and `checkpoint`. All other kinds accept any `data` payload.
+</Warning>
+
+| Kind | Required `data` fields | Notes |
+|------|----------------------|-------|
+| `prompt` | `text`, `tokenCount` | AI prompt sent by the candidate |
+| `ai_response` | — | Response from the AI tool |
+| `file_diff` | `path` | `diff`, `linesAdded`, `linesRemoved` are optional but recommended |
+| `file_create` | `path` | `content`, `linesAdded`, `sizeBytes` are optional |
+| `file_delete` | — | |
+| `command` | `command` | `exitCode`, `durationMs`, `stdout`, `stderr` optional |
+| `test_run` | — | `suite`, `passed`, `failed`, `skipped`, `durationMs` optional |
+| `build_run` | — | |
+| `git_action` | `action` | `ref`, `message`, `commit` optional |
+| `decision_event` | — | `title`, `chosenOption`, `context`, `tradeoffs`, `rationale`, `impactScore` are indexed by the reviewer dashboard |
+| `session_start` | — | `cwd` and `assessmentId` in `data` are auto-promoted into session metadata |
+| `session_end` | — | Triggers session finalization and scoring pipeline |
+| `checkpoint` | — | `label`, `trigger`, `summary` optional |
+| `tool_use` | — | |
+| `tool_result` | — | `tool_call` is accepted as a legacy alias and normalized to `tool_result` |
+| `planning` | — | |
+| `mcp_call` | — | |
+
+For `decision_event`, the following `data` fields are indexed in the decisions table and surfaced in the reviewer dashboard:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Short description of the decision |
+| `chosenOption` | string | The option the candidate selected |
+| `context` | string | Background and constraints |
+| `tradeoffs` | string | Alternatives considered |
+| `rationale` | string | Reasoning for the chosen option |
+| `impactScore` | integer (1–5) | Estimated impact of the decision |
+
+---
+
+## Example: ingest a command event
+
+```bash
+curl -X POST https://api.promptster.ai/v1/hooks/ingest \
+  -H "X-API-Key: PST-ABCD-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "01234567-89ab-cdef-0123-456789abcdef",
+    "sessionId": "my-session-uuid",
+    "ts": "2026-04-01T10:15:00Z",
+    "kind": "command",
+    "source": {
+      "channel": "cli",
+      "integration": "shell",
+      "emitter": "promptster-hook"
+    },
+    "actor": { "type": "human" },
+    "provenance": {
+      "attribution": "likely_human",
+      "confidence": 0.9,
+      "observability": "high"
+    },
+    "v": 1,
+    "data": {
+      "command": "pnpm test",
+      "exitCode": 0,
+      "durationMs": 4200
+    }
+  }'
+```
+
+## Example: ingest a decision event
+
+```bash
+curl -X POST https://api.promptster.ai/v1/hooks/ingest \
+  -H "X-API-Key: PST-ABCD-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "aaaabbbb-cccc-dddd-eeee-ffffffffffff",
+    "sessionId": "my-session-uuid",
+    "ts": "2026-04-01T11:02:00Z",
+    "kind": "decision_event",
+    "source": { "channel": "mcp", "integration": "claude-code", "emitter": "promptster-mcp" },
+    "actor": { "type": "human" },
+    "provenance": { "attribution": "likely_human", "confidence": 0.95, "observability": "high" },
+    "v": 1,
+    "data": {
+        "title": "Use JSONB for event payloads over a typed columns approach",
+        "chosenOption": "JSONB payload column",
+        "context": "Event schema is still evolving across multiple integrations",
+        "tradeoffs": "Harder to query individual fields without GIN indexes",
+        "rationale": "Avoids migrations as schema changes; read performance is acceptable for our access patterns",
+      "impactScore": 4
+    }
+  }'
+```

@@ -1,0 +1,89 @@
+---
+title: "Quick Start"
+description: "Get started as a candidate in under 5 minutes."
+---
+
+<Steps>
+  <Step title="Install the CLI">
+    Run the installer script:
+
+    ```bash
+    curl -fsSL https://get.promptster.ai | sh
+    ```
+
+    If you prefer to install without the script, use npm directly:
+
+    ```bash
+    npm install -g @promptster/cli
+    ```
+
+    Either method installs the `promptster` command globally on your machine.
+  </Step>
+
+  <Step title="Start your assessment">
+    Run `promptster start` with the assessment key from your email:
+
+    ```bash
+    promptster start PST-XXXX-XXXX
+    ```
+
+    Your key is in `PST-XXXX-XXXX` format and was sent to you by the hiring team. Replace `PST-XXXX-XXXX` with your actual key.
+
+    The CLI validates your key against the Promptster API and displays your assessment details — organization, title, and time limit — before continuing.
+  </Step>
+
+  <Step title="Review and accept the data capture notice">
+    Before your session begins, the CLI shows you exactly what will and will not be recorded. Read it, then type `yes` to continue.
+
+    **What IS captured:**
+
+    | What | Example |
+    |------|---------|
+    | Prompts you submit | "Refactor this function to use async/await" |
+    | Tool calls made by the AI | File edits, shell commands, web searches |
+    | Files the AI creates or edits | Unified diffs of every change |
+    | Shell commands run by the AI | Command text and exit code |
+
+    **What is NOT captured:**
+
+    - Keystrokes between prompts
+    - File contents you never ask the AI to touch
+    - Environment variables and secrets
+    - Browser activity
+    - Clipboard contents
+
+    <Note>
+      Data is retained for 90 days. For deletion requests, contact privacy@promptster.ai.
+    </Note>
+  </Step>
+
+  <Step title="Work on your task">
+    Open your AI coding tool and start working. Claude Code and Cursor are auto-configured when `promptster start` runs — hooks are written at the project level, so capture begins automatically when you open the workspace.
+
+    The task brief is also saved as `TASK.md` in your workspace for easy reference.
+
+    **Documenting decisions:** When you make a significant architecture or tradeoff choice, run:
+
+    ```bash
+    promptster explain
+    ```
+
+    This opens an interactive prompt where you describe your reasoning. Reviewers read these explanations alongside the code changes — it is one of the most valuable parts of your submission. You can also review the current task and time remaining at any time:
+
+    ```bash
+    promptster brief
+    ```
+  </Step>
+
+  <Step title="Submit when done">
+    When you have finished the task, run:
+
+    ```bash
+    promptster done
+    ```
+
+    This flushes any buffered events to the server and marks your session complete. If you have any pending decision explanations that you started but did not finish, the CLI will prompt you to complete them before submitting.
+
+    Once submitted, your session is available for the hiring team to review.
+  </Step>
+</Steps>
