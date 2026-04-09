@@ -1,0 +1,100 @@
+---
+title: "List Candidates"
+api: "GET /v1/candidates"
+description: "List all candidates across all assessments for your organization."
+---
+
+Returns a paginated list of all candidates (candidate keys) across all assessments, ordered by creation date. Each entry includes the linked assessment title and total token cost.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField query="limit" type="integer" default="50">
+  Number of candidates to return. Maximum 200.
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of candidates to skip for pagination.
+</ParamField>
+
+<ResponseField name="candidates" type="array">
+  List of candidate objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Candidate key record ID (UUID).</ResponseField>
+    <ResponseField name="key" type="string">The candidate key (e.g. `PST-ABCD-1234`).</ResponseField>
+    <ResponseField name="candidateEmail" type="string | null">Candidate's email address.</ResponseField>
+    <ResponseField name="candidateName" type="string | null">Candidate's display name.</ResponseField>
+    <ResponseField name="status" type="string">Key status: `pending`, `active`, `completed`, or `expired`.</ResponseField>
+    <ResponseField name="sessionId" type="string | null">Linked session ID (set when candidate starts).</ResponseField>
+    <ResponseField name="assessmentId" type="string">Parent assessment ID.</ResponseField>
+    <ResponseField name="assessmentTitle" type="string">Parent assessment title.</ResponseField>
+    <ResponseField name="expiresAt" type="string">ISO 8601 expiration timestamp.</ResponseField>
+    <ResponseField name="redeemedAt" type="string | null">When the candidate redeemed the key.</ResponseField>
+    <ResponseField name="completedAt" type="string | null">When the candidate submitted.</ResponseField>
+    <ResponseField name="totalCostUsd" type="number">Total LLM token cost in USD.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="total" type="integer">
+  Total number of candidates across all assessments.
+</ResponseField>
+
+<ResponseField name="limit" type="integer">
+  The limit used for this request.
+</ResponseField>
+
+<ResponseField name="offset" type="integer">
+  The offset used for this request.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "candidates": [
+    {
+      "id": "k1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "key": "PST-ABCD-1234",
+      "candidateEmail": "jane@example.com",
+      "candidateName": "Jane Smith",
+      "status": "completed",
+      "sessionId": "sess_abc123",
+      "assessmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "assessmentTitle": "React State Management Bug Fix",
+      "expiresAt": "2026-04-14T10:30:00.000Z",
+      "redeemedAt": "2026-04-08T09:00:00.000Z",
+      "completedAt": "2026-04-08T10:15:00.000Z",
+      "totalCostUsd": 3.42
+    },
+    {
+      "id": "k2b3c4d5-e6f7-8901-bcde-f12345678901",
+      "key": "PST-EFGH-5678",
+      "candidateEmail": "john@example.com",
+      "candidateName": "John Doe",
+      "status": "pending",
+      "sessionId": null,
+      "assessmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "assessmentTitle": "React State Management Bug Fix",
+      "expiresAt": "2026-04-14T10:30:00.000Z",
+      "redeemedAt": null,
+      "completedAt": null,
+      "totalCostUsd": 0
+    }
+  ],
+  "total": 2,
+  "limit": 50,
+  "offset": 0
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl "https://api.promptster.ai/v1/candidates?limit=50&offset=0" \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

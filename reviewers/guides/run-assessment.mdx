@@ -1,0 +1,158 @@
+---
+title: "Run an Assessment"
+description: "End-to-end guide for creating an assessment, inviting candidates, and tracking their progress through completion."
+---
+
+This guide covers the full assessment lifecycle: defining the task, generating candidate keys with email invites, monitoring progress, and handling time limits.
+
+## 1. Create the assessment
+
+An assessment defines the coding task, target role, and constraints.
+
+```bash
+curl -X POST https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Implement rate limiter middleware",
+    "role": "Backend Engineer",
+    "taskBrief": "Add a sliding-window rate limiter to the Express API. It should support per-route configuration, return standard 429 responses with Retry-After headers, and persist counters in Redis. Include tests.",
+    "repoUrl": "https://github.com/acme/api-server",
+    "timeLimitMinutes": 120,
+    "expiresInDays": 14,
+    "tokenBudgetUsd": 50
+  }'
+```
+
+### Required fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Short name for the assessment (max 255 chars) |
+| `role` | string | Target role (e.g., "Senior Backend Engineer") |
+| `taskBrief` | string | The coding task description. Required unless `issueId` is provided. |
+
+### Optional fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `repoUrl` | string | -- | GitHub repository URL the candidate will clone |
+| `issueId` | string | -- | Use a problem from the Promptster OSS issue library. Auto-populates `taskBrief` if not provided. |
+| `timeLimitMinutes` | integer | -- | Maximum time allowed. The CLI enforces this limit. |
+| `expiresInDays` | integer | `7` | Days until generated candidate keys expire |
+| `tokenBudgetUsd` | number | -- | Maximum LLM token spend per candidate in USD (max $1000) |
+
+<Tip>
+Use `issueId` to select from Promptster's library of 23 verified OSS bugs across TypeScript, Python, Go, and React. Each comes with automated test suites that verify the candidate's fix.
+</Tip>
+
+## 2. Generate candidate keys
+
+Create keys for one or more candidates. Providing `candidateEmails` triggers automatic invite emails.
+
+```bash
+curl -X POST https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID/keys \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "count": 3,
+    "candidateEmails": [
+      "alice@example.com",
+      "bob@example.com",
+      "carol@example.com"
+    ],
+    "candidateNames": [
+      "Alice Johnson",
+      "Bob Chen",
+      "Carol Williams"
+    ],
+    "orgName": "Acme Corp"
+  }'
+```
+
+The response contains an array of keys:
+
+```json
+{
+  "keys": [
+    {
+      "id": "uuid-1",
+      "key": "PST-A3K7-M9X2",
+      "assessmentId": "uuid-assessment",
+      "candidateEmail": "alice@example.com",
+      "candidateName": "Alice Johnson",
+      "status": "pending",
+      "expiresAt": "2026-04-21T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Key lifecycle
+
+Each candidate key moves through these statuses:
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Key created, not yet redeemed by candidate |
+| `active` | Candidate has run `promptster start` and is working |
+| `completed` | Candidate has run `promptster done` |
+| `expired` | Key passed its `expiresAt` without being redeemed |
+
+<Note>
+You can generate up to 50 keys in a single request. If `candidateEmails` is provided, its length must match `count`.
+</Note>
+
+## 3. Track candidate status
+
+List keys for an assessment to see which candidates have started and completed:
+
+```bash
+curl https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID/keys \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Each key includes `status`, `redeemedAt`, `completedAt`, `sessionId`, and `totalCostUsd`.
+
+You can also list all candidates across assessments:
+
+```bash
+curl "https://api.promptster.ai/v1/candidates?limit=50&offset=0" \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+## 4. Handle time limits
+
+When `timeLimitMinutes` is set on the assessment:
+
+- The CLI displays a countdown timer to the candidate
+- When time expires, the CLI automatically runs the submission flow (`promptster done`)
+- The session's `endedAt` is set and the processing pipeline begins
+
+There is no server-side enforcement that prevents late submissions, but the timeline clearly shows when the candidate exceeded the time limit.
+
+## 5. Monitor token spend
+
+If `tokenBudgetUsd` is set, the platform tracks cumulative LLM token cost for each candidate's session. When the budget is reached, the candidate is notified and additional AI tool usage is restricted.
+
+Check spend per candidate via the keys endpoint -- each key includes `totalCostUsd`.
+
+## 6. Delete keys or assessments
+
+Soft-delete a single candidate key:
+
+```bash
+curl -X DELETE https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID/keys/$KEY_ID \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Soft-delete an entire assessment (also deletes all its candidate keys):
+
+```bash
+curl -X DELETE https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+<Warning>
+Deleting an assessment soft-deletes all associated candidate keys. Existing sessions and their artifacts are preserved.
+</Warning>

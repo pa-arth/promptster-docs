@@ -1,0 +1,100 @@
+---
+title: "Create Assessment"
+api: "POST /v1/assessments"
+description: "Create a new hiring assessment for your organization."
+---
+
+Create an assessment that defines the coding task candidates will complete. You can link it to an OSS issue from the Promptster problem library, or provide your own task brief and repo URL.
+
+### Authentication
+
+Requires an org API key with an active subscription.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField body="title" type="string" required>
+  The assessment title shown to candidates and in the dashboard.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  The role this assessment is for (e.g. "Senior Frontend Engineer").
+</ParamField>
+
+<ParamField body="taskBrief" type="string">
+  Markdown description of the task. Required if `issueId` is not provided. Auto-populated from the issue if omitted.
+</ParamField>
+
+<ParamField body="repoUrl" type="string">
+  URL of the repository candidates will work in. Must be a valid URL.
+</ParamField>
+
+<ParamField body="issueId" type="string">
+  ID of an OSS issue from the Promptster problem library. When provided, the task brief is auto-populated from the issue.
+</ParamField>
+
+<ParamField body="timeLimitMinutes" type="integer">
+  Time limit for the assessment in minutes. Must be a positive integer.
+</ParamField>
+
+<ParamField body="expiresInDays" type="integer" default="7">
+  Number of days before candidate keys expire. Must be a positive integer.
+</ParamField>
+
+<ParamField body="tokenBudgetUsd" type="number">
+  Maximum token spend allowed per candidate in USD. Must be positive and at most 1000.
+</ParamField>
+
+<ResponseField name="assessment" type="object">
+  The created assessment object.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Unique assessment ID (UUID).</ResponseField>
+    <ResponseField name="orgId" type="string">Your organization ID.</ResponseField>
+    <ResponseField name="title" type="string">Assessment title.</ResponseField>
+    <ResponseField name="role" type="string">Target role.</ResponseField>
+    <ResponseField name="taskBrief" type="string">Task description.</ResponseField>
+    <ResponseField name="repoUrl" type="string | null">Repository URL.</ResponseField>
+    <ResponseField name="issueId" type="string | null">Linked OSS issue ID.</ResponseField>
+    <ResponseField name="timeLimitMinutes" type="integer | null">Time limit in minutes.</ResponseField>
+    <ResponseField name="tokenBudgetUsd" type="number | null">Token budget in USD.</ResponseField>
+    <ResponseField name="expiresInDays" type="integer">Key expiry period in days.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 201
+{
+  "assessment": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "orgId": "org_2abc123",
+    "title": "React State Management Bug Fix",
+    "role": "Senior Frontend Engineer",
+    "taskBrief": "Fix the stale closure bug in the useEffect hook that causes the counter to show incorrect values after rapid clicks.",
+    "repoUrl": "https://github.com/acme/frontend-challenge",
+    "issueId": null,
+    "timeLimitMinutes": 60,
+    "tokenBudgetUsd": 25.0,
+    "expiresInDays": 7,
+    "createdAt": "2026-04-07T10:30:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl -X POST https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer psk_live_abc123def456" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "React State Management Bug Fix",
+    "role": "Senior Frontend Engineer",
+    "taskBrief": "Fix the stale closure bug in the useEffect hook.",
+    "repoUrl": "https://github.com/acme/frontend-challenge",
+    "timeLimitMinutes": 60,
+    "tokenBudgetUsd": 25.0
+  }'
+```
+</RequestExample>

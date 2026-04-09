@@ -1,0 +1,96 @@
+---
+title: "List Issues"
+api: "GET /v1/issues"
+description: "Browse the Promptster problem library of real OSS bugs for use in assessments."
+---
+
+Returns a paginated list of issues from the Promptster problem library. Each issue is a real, verified open-source bug with a test suite that validates the fix. Use these when creating assessments to give candidates well-defined coding challenges.
+
+### Authentication
+
+Requires either an org API key or a Clerk JWT.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField query="language" type="string">
+  Filter by programming language (e.g. `typescript`, `python`, `go`, `react`).
+</ParamField>
+
+<ParamField query="difficulty" type="string">
+  Filter by difficulty level (e.g. `easy`, `medium`, `hard`).
+</ParamField>
+
+<ParamField query="status" type="string" default="active">
+  Filter by issue status. Defaults to `active`.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="20">
+  Number of issues to return. Maximum 50.
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of issues to skip for pagination.
+</ParamField>
+
+<ResponseField name="issues" type="array">
+  List of issue objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Issue ID (UUID).</ResponseField>
+    <ResponseField name="source" type="string">Source repository host (e.g. `github`).</ResponseField>
+    <ResponseField name="repoUrl" type="string">Repository URL.</ResponseField>
+    <ResponseField name="repoSlug" type="string | null">Short repo identifier (e.g. `facebook/react`).</ResponseField>
+    <ResponseField name="issueNumber" type="integer | null">Original issue/PR number.</ResponseField>
+    <ResponseField name="issueTitle" type="string">Issue title.</ResponseField>
+    <ResponseField name="issueUrl" type="string | null">Link to the original GitHub issue.</ResponseField>
+    <ResponseField name="language" type="string">Primary language.</ResponseField>
+    <ResponseField name="difficulty" type="string">Difficulty level.</ResponseField>
+    <ResponseField name="skillTags" type="string[]">Skill tags (e.g. `["state-management", "hooks"]`).</ResponseField>
+    <ResponseField name="estimatedMinutes" type="integer | null">Estimated time to solve in minutes.</ResponseField>
+    <ResponseField name="taskBrief" type="string">Markdown task description for candidates.</ResponseField>
+    <ResponseField name="setupInstructions" type="string">Setup instructions for the candidate's workspace.</ResponseField>
+    <ResponseField name="isCustom" type="boolean">Whether this is a custom (org-uploaded) issue.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="total" type="integer">Total number of matching issues.</ResponseField>
+<ResponseField name="limit" type="integer">The limit used for this request.</ResponseField>
+<ResponseField name="offset" type="integer">The offset used for this request.</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "issues": [
+    {
+      "id": "iss_abc123",
+      "source": "github",
+      "repoUrl": "https://github.com/facebook/react",
+      "repoSlug": "facebook/react",
+      "issueNumber": 28347,
+      "issueTitle": "useEffect cleanup runs with stale closure",
+      "issueUrl": "https://github.com/facebook/react/issues/28347",
+      "language": "typescript",
+      "difficulty": "medium",
+      "skillTags": ["hooks", "closures", "state-management"],
+      "estimatedMinutes": 45,
+      "taskBrief": "Fix the stale closure bug in the useEffect cleanup function...",
+      "setupInstructions": "Run `npm install` then `npm test` to see the failing test.",
+      "isCustom": false,
+      "createdAt": "2026-03-01T00:00:00.000Z"
+    }
+  ],
+  "total": 23,
+  "limit": 20,
+  "offset": 0
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl "https://api.promptster.ai/v1/issues?language=typescript&difficulty=medium&limit=10" \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

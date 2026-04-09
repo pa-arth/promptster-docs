@@ -1,0 +1,173 @@
+---
+title: "Cohort Analysis"
+description: "Compare candidates across the same assessment using cohort statistics and percentile rankings."
+---
+
+When multiple candidates complete the same assessment, Promptster computes cohort-level statistics and percentile rankings so you can compare performance objectively.
+
+## Fetch cohort stats for an assessment
+
+```bash
+curl https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID/cohort-stats \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "cohortStats": {
+    "sessionCount": 8,
+    "metrics": {
+      "avgDurationMs": 5400000,
+      "avgPromptCount": 42.3,
+      "avgCommandFailRate": 0.15,
+      "avgVerifyIntensity": 0.28,
+      "avgManualEditRatio": 0.12,
+      "avgFirstChangeLatencyMs": 240000,
+      "testPassRate": 75
+    }
+  }
+}
+```
+
+Returns `null` for `cohortStats` if no completed sessions exist for this assessment.
+
+## Percentile rankings for a specific candidate
+
+Add `?sessionId=xxx` to compute percentile rankings for a specific candidate relative to the cohort:
+
+```bash
+curl "https://api.promptster.ai/v1/assessments/$ASSESSMENT_ID/cohort-stats?sessionId=$SESSION_ID" \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Response includes a `percentiles` object:
+
+```json
+{
+  "cohortStats": {
+    "sessionCount": 8,
+    "metrics": { ... },
+    "percentiles": {
+      "durationMs": 0.714,
+      "promptCount": 0.571,
+      "commandFailRate": 0.857,
+      "verifyIntensity": 0.429,
+      "manualEditRatio": 0.286,
+      "firstChangeLatencyMs": 0.571
+    }
+  }
+}
+```
+
+<Note>
+Percentile rankings require at least 2 completed sessions. With fewer than 2, the `percentiles` field is omitted.
+</Note>
+
+## Session-level cohort stats
+
+You can also fetch cohort stats from a session's perspective, without needing to know the assessment ID:
+
+```bash
+curl https://api.promptster.ai/v1/sessions/$SESSION_ID/cohort-stats \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+This automatically looks up the assessment the session belongs to and returns the same cohort statistics with percentile rankings for that session.
+
+## Understanding the metrics
+
+### What higher percentiles mean
+
+Percentile values range from 0.0 to 1.0. Higher is better for all metrics:
+
+| Metric | Higher percentile means |
+|--------|----------------------|
+| `durationMs` | Completed faster than peers |
+| `promptCount` | Used fewer prompts (more efficient) |
+| `commandFailRate` | Fewer failed commands (cleaner execution) |
+| `verifyIntensity` | Verified more frequently (more thorough) |
+| `manualEditRatio` | More manual editing (higher engagement) |
+| `firstChangeLatencyMs` | Started coding faster (quicker ramp-up) |
+
+### What metrics matter most
+
+The metrics that matter depend on the role and task, but these tend to be the strongest signals:
+
+<AccordionGroup>
+  <Accordion title="Test pass rate">
+    The most objective metric. For assessments using the OSS issue library with verified test suites, this directly measures whether the candidate fixed the bug. A `testPassRate` of 100 means all tests pass.
+  </Accordion>
+
+  <Accordion title="Command fail rate">
+    A low `commandFailRate` indicates the candidate writes commands carefully and catches errors. A very high rate may indicate trial-and-error debugging without understanding.
+  </Accordion>
+
+  <Accordion title="Verify intensity">
+    Candidates who run tests and check their work frequently tend to produce higher-quality solutions. Low `verifyIntensity` can indicate over-reliance on AI without validation.
+  </Accordion>
+
+  <Accordion title="First change latency">
+    How long the candidate spends understanding the problem before making changes. Too fast can indicate rushing; too slow can indicate difficulty. Compare against the cohort average for context.
+  </Accordion>
+</AccordionGroup>
+
+## Example: ranking candidates
+
+```python
+import requests
+import os
+
+API_KEY = os.environ["PROMPTSTER_API_KEY"]
+BASE = "https://api.promptster.ai"
+HEADERS = {"Authorization": f"Bearer {API_KEY}"}
+
+def rank_candidates(assessment_id):
+    # Get all candidate keys for this assessment
+    res = requests.get(
+        f"{BASE}/v1/assessments/{assessment_id}/keys",
+        headers=HEADERS,
+    )
+    keys = res.json()["keys"]
+
+    candidates = []
+    for key in keys:
+        if key["status"] != "completed" or not key["sessionId"]:
+            continue
+
+        # Get cohort stats with percentiles for this session
+        res = requests.get(
+            f"{BASE}/v1/assessments/{assessment_id}/cohort-stats",
+            headers=HEADERS,
+            params={"sessionId": key["sessionId"]},
+        )
+        stats = res.json().get("cohortStats")
+        if not stats or "percentiles" not in stats:
+            continue
+
+        pctl = stats["percentiles"]
+        # Weighted composite score
+        composite = (
+            pctl.get("commandFailRate", 0) * 0.3
+            + pctl.get("verifyIntensity", 0) * 0.25
+            + pctl.get("durationMs", 0) * 0.2
+            + pctl.get("promptCount", 0) * 0.15
+            + pctl.get("firstChangeLatencyMs", 0) * 0.1
+        )
+
+        candidates.append({
+            "name": key.get("candidateName", key["key"]),
+            "sessionId": key["sessionId"],
+            "composite": round(composite, 3),
+            "percentiles": pctl,
+        })
+
+    # Sort by composite score
+    candidates.sort(key=lambda c: c["composite"], reverse=True)
+    return candidates
+```
+
+<Tip>
+Cohort statistics are most meaningful with 5+ candidates. With smaller cohorts, rely more on absolute metrics and artifact analysis rather than percentile rankings.
+</Tip>

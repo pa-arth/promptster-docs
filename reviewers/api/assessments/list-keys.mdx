@@ -1,0 +1,66 @@
+---
+title: "List Candidate Keys"
+api: "GET /v1/assessments/:id/keys"
+description: "List all candidate keys for an assessment."
+---
+
+Returns all active (non-deleted) candidate keys for the specified assessment, ordered by creation date. Includes the total token cost for each candidate's session.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID (UUID).
+</ParamField>
+
+<ResponseField name="keys" type="array">
+  List of candidate key objects with usage cost.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Key record ID (UUID).</ResponseField>
+    <ResponseField name="key" type="string">The candidate key (e.g. `PST-ABCD-1234`).</ResponseField>
+    <ResponseField name="candidateEmail" type="string | null">Candidate's email.</ResponseField>
+    <ResponseField name="candidateName" type="string | null">Candidate's name.</ResponseField>
+    <ResponseField name="status" type="string">`pending`, `active`, `completed`, or `expired`.</ResponseField>
+    <ResponseField name="sessionId" type="string | null">Linked session ID once the candidate starts.</ResponseField>
+    <ResponseField name="expiresAt" type="string">ISO 8601 expiration timestamp.</ResponseField>
+    <ResponseField name="redeemedAt" type="string | null">When the candidate redeemed the key.</ResponseField>
+    <ResponseField name="completedAt" type="string | null">When the candidate submitted.</ResponseField>
+    <ResponseField name="totalCostUsd" type="number">Total LLM token cost in USD for this candidate's session.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "keys": [
+    {
+      "id": "k1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "key": "PST-ABCD-1234",
+      "assessmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "orgId": "org_2abc123",
+      "candidateEmail": "jane@example.com",
+      "candidateName": "Jane Smith",
+      "status": "completed",
+      "sessionId": "sess_abc123",
+      "expiresAt": "2026-04-14T10:30:00.000Z",
+      "redeemedAt": "2026-04-08T09:00:00.000Z",
+      "completedAt": "2026-04-08T10:15:00.000Z",
+      "totalCostUsd": 3.42,
+      "createdAt": "2026-04-07T10:30:00.000Z"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/assessments/a1b2c3d4-e5f6-7890-abcd-ef1234567890/keys \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

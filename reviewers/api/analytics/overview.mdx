@@ -1,0 +1,146 @@
+---
+title: "Analytics Overview"
+api: "GET /v1/analytics/overview"
+description: "Retrieve a high-level analytics summary across all sessions in your organization."
+---
+
+Returns aggregate metrics including completion rates, weekly trends, strategy tier distribution, and session-level statistics. Useful for building dashboards or tracking hiring pipeline health.
+
+### Authentication
+
+Requires a Clerk JWT (dashboard users only).
+
+```
+Authorization: Bearer sk_live_...
+```
+
+<ResponseField name="summary" type="object">
+  High-level counts and rates.
+  <Expandable title="properties">
+    <ResponseField name="totalCandidates" type="integer">Total candidates across all assessments.</ResponseField>
+    <ResponseField name="completionRate" type="number">Fraction of candidates who completed (0–1).</ResponseField>
+    <ResponseField name="avgTimeMinutes" type="number">Average session duration in minutes.</ResponseField>
+    <ResponseField name="passRate" type="number">Fraction of completed sessions that passed tests (0–1).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="funnel" type="array">
+  Assessment funnel stages with counts and percentages.
+  <Expandable title="properties">
+    <ResponseField name="label" type="string">Funnel stage name (e.g. `invited`, `started`, `completed`).</ResponseField>
+    <ResponseField name="count" type="integer">Number of candidates at this stage.</ResponseField>
+    <ResponseField name="pct" type="number">Percentage of total (0–100).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="weeklyCompletions" type="array">
+  Completions grouped by ISO week.
+  <Expandable title="properties">
+    <ResponseField name="week" type="string">ISO week label (e.g. `2026-W14`).</ResponseField>
+    <ResponseField name="count" type="integer">Sessions completed that week.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="trends" type="object">
+  Week-over-week changes.
+  <Expandable title="properties">
+    <ResponseField name="completionRateChange" type="number">Change in completion rate vs. prior week.</ResponseField>
+    <ResponseField name="avgTimeChange" type="number">Change in average time vs. prior week.</ResponseField>
+    <ResponseField name="passRateChange" type="number">Change in pass rate vs. prior week.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="strategyTierDistribution" type="object | null">
+  Distribution of candidates across strategy tiers (from prompt analysis).
+  <Expandable title="properties">
+    <ResponseField name="strong" type="integer">Candidates rated "strong".</ResponseField>
+    <ResponseField name="adequate" type="integer">Candidates rated "adequate".</ResponseField>
+    <ResponseField name="developing" type="integer">Candidates rated "developing".</ResponseField>
+    <ResponseField name="insufficient" type="integer">Candidates rated "insufficient".</ResponseField>
+    <ResponseField name="total" type="integer">Total rated candidates.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="testPassRate" type="number">
+  Overall test pass rate across all sessions.
+</ResponseField>
+
+<ResponseField name="avgPromptCount" type="number">
+  Average number of prompts per session.
+</ResponseField>
+
+<ResponseField name="sessionMetrics" type="object | null">
+  Aggregate session-level metrics.
+  <Expandable title="properties">
+    <ResponseField name="avgFirstChangeLatencyMs" type="number | null">Average time to first code change in milliseconds.</ResponseField>
+    <ResponseField name="avgVerifyIntensity" type="number">Average verification intensity score.</ResponseField>
+    <ResponseField name="avgErrorEpisodes" type="number">Average error recovery episodes per session.</ResponseField>
+    <ResponseField name="totalPrompts" type="integer">Total prompts across all sessions.</ResponseField>
+    <ResponseField name="totalCommands" type="integer">Total commands across all sessions.</ResponseField>
+    <ResponseField name="totalFileDiffs" type="integer">Total file diffs across all sessions.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="topTools" type="array">
+  Most frequently used tools across all sessions.
+  <Expandable title="properties">
+    <ResponseField name="toolName" type="string">Tool name (e.g. `Edit`, `Write`, `Bash`).</ResponseField>
+    <ResponseField name="count" type="integer">Total invocations.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "summary": {
+    "totalCandidates": 47,
+    "completionRate": 0.83,
+    "avgTimeMinutes": 52.3,
+    "passRate": 0.71
+  },
+  "funnel": [
+    { "label": "invited", "count": 47, "pct": 100 },
+    { "label": "started", "count": 42, "pct": 89.4 },
+    { "label": "completed", "count": 39, "pct": 83.0 }
+  ],
+  "weeklyCompletions": [
+    { "week": "2026-W13", "count": 8 },
+    { "week": "2026-W14", "count": 12 }
+  ],
+  "trends": {
+    "completionRateChange": 0.05,
+    "avgTimeChange": -3.2,
+    "passRateChange": 0.02
+  },
+  "strategyTierDistribution": {
+    "strong": 12,
+    "adequate": 18,
+    "developing": 6,
+    "insufficient": 3,
+    "total": 39
+  },
+  "testPassRate": 0.71,
+  "avgPromptCount": 14.2,
+  "sessionMetrics": {
+    "avgFirstChangeLatencyMs": 95000,
+    "avgVerifyIntensity": 2.1,
+    "avgErrorEpisodes": 1.3,
+    "totalPrompts": 554,
+    "totalCommands": 312,
+    "totalFileDiffs": 189
+  },
+  "topTools": [
+    { "toolName": "Edit", "count": 342 },
+    { "toolName": "Bash", "count": 287 },
+    { "toolName": "Read", "count": 201 }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/analytics/overview \
+  -H "Authorization: Bearer sk_live_abc123def456"
+```
+</RequestExample>

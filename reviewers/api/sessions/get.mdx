@@ -1,0 +1,68 @@
+---
+title: "Get Session"
+api: "GET /v1/sessions/:id"
+description: "Retrieve a single session by ID."
+---
+
+Returns the full session object including all metadata.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ResponseField name="session" type="object">
+  The full session object.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Session ID.</ResponseField>
+    <ResponseField name="orgId" type="string">Organization ID.</ResponseField>
+    <ResponseField name="sourceService" type="string[]">Source services.</ResponseField>
+    <ResponseField name="startedAt" type="string | null">Session start time.</ResponseField>
+    <ResponseField name="endedAt" type="string | null">Session end time.</ResponseField>
+    <ResponseField name="lastActivityAt" type="string | null">Last event timestamp.</ResponseField>
+    <ResponseField name="metadata" type="object">Arbitrary session metadata.</ResponseField>
+    <ResponseField name="eventCount" type="integer">Total timeline events.</ResponseField>
+    <ResponseField name="decisionFlagCount" type="integer">Number of flagged decisions.</ResponseField>
+    <ResponseField name="aiAttributionPct" type="number | null">Percentage of code attributed to AI.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 creation timestamp.</ResponseField>
+    <ResponseField name="updatedAt" type="string">ISO 8601 last update timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "session": {
+    "id": "sess_abc123",
+    "orgId": "org_2abc123",
+    "sourceService": ["claude_code"],
+    "startedAt": "2026-04-07T09:00:00.000Z",
+    "endedAt": "2026-04-07T10:15:00.000Z",
+    "lastActivityAt": "2026-04-07T10:14:30.000Z",
+    "metadata": {
+      "submissionsRepo": "acme/promptster-submissions",
+      "submissionsBranch": "candidate/sess_abc123"
+    },
+    "eventCount": 142,
+    "decisionFlagCount": 3,
+    "aiAttributionPct": 72.5,
+    "createdAt": "2026-04-07T09:00:00.000Z",
+    "updatedAt": "2026-04-07T10:15:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/sessions/sess_abc123 \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

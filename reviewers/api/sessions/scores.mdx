@@ -1,0 +1,149 @@
+---
+title: "Session Scores"
+api: "GET /v1/sessions/:id/scores"
+description: "Get or submit reviewer rubric scores for a session."
+---
+
+## Get Scores
+
+<br />
+
+```
+GET /v1/sessions/:id/scores
+```
+
+Retrieves all reviewer rubric scores for a session, plus the computed Prompter Score if available.
+
+## Submit Scores
+
+<br />
+
+```
+POST /v1/sessions/:id/scores
+```
+
+Submit or update rubric scores for a session. Scores are upserted per dimension -- submitting a score for a dimension that already has one will update it.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+### POST Body
+
+The request body is an array of score objects (1 to 5 items).
+
+<ParamField body="dimension" type="string" required>
+  Score dimension. One of: `problem_decomposition`, `ai_orchestration`, `code_quality`, `debugging_process`, `communication`.
+</ParamField>
+
+<ParamField body="score" type="integer" required>
+  Score value from 1 to 5.
+</ParamField>
+
+<ParamField body="notes" type="string">
+  Optional reviewer notes for this dimension.
+</ParamField>
+
+### GET Response
+
+<ResponseField name="scores" type="array">
+  List of rubric score objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Score record ID.</ResponseField>
+    <ResponseField name="sessionId" type="string">Session ID.</ResponseField>
+    <ResponseField name="dimension" type="string">Score dimension.</ResponseField>
+    <ResponseField name="score" type="integer">Score value (1-5).</ResponseField>
+    <ResponseField name="notes" type="string | null">Reviewer notes.</ResponseField>
+    <ResponseField name="reviewerId" type="string | null">ID of the reviewer who submitted.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
+    <ResponseField name="updatedAt" type="string">ISO 8601 timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="prompterScore" type="object | null">
+  The computed Prompter Score artifact, or `null` if not yet computed.
+</ResponseField>
+
+<ResponseExample>
+```json GET 200
+{
+  "scores": [
+    {
+      "id": "sc_abc123",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "dimension": "problem_decomposition",
+      "score": 4,
+      "notes": "Good breakdown of the problem into subtasks.",
+      "reviewerId": "user_xyz",
+      "createdAt": "2026-04-07T11:00:00.000Z",
+      "updatedAt": "2026-04-07T11:00:00.000Z"
+    },
+    {
+      "id": "sc_def456",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "dimension": "ai_orchestration",
+      "score": 5,
+      "notes": null,
+      "reviewerId": "user_xyz",
+      "createdAt": "2026-04-07T11:00:00.000Z",
+      "updatedAt": "2026-04-07T11:00:00.000Z"
+    }
+  ],
+  "prompterScore": null
+}
+```
+</ResponseExample>
+
+<ResponseExample>
+```json POST 201
+{
+  "scores": [
+    {
+      "id": "sc_abc123",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "dimension": "problem_decomposition",
+      "score": 4,
+      "notes": "Good breakdown of the problem into subtasks.",
+      "reviewerId": "user_xyz",
+      "createdAt": "2026-04-07T11:00:00.000Z",
+      "updatedAt": "2026-04-07T11:00:00.000Z"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl (GET)
+curl https://api.promptster.ai/v1/sessions/sess_abc123/scores \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+
+```bash curl (POST)
+curl -X POST https://api.promptster.ai/v1/sessions/sess_abc123/scores \
+  -H "Authorization: Bearer psk_live_abc123def456" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "dimension": "problem_decomposition",
+      "score": 4,
+      "notes": "Good breakdown of the problem into subtasks."
+    },
+    {
+      "dimension": "ai_orchestration",
+      "score": 5
+    }
+  ]'
+```
+</RequestExample>

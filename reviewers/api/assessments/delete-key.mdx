@@ -1,0 +1,47 @@
+---
+title: "Delete Candidate Key"
+api: "DELETE /v1/assessments/:id/keys/:keyId"
+description: "Soft-delete a single candidate key."
+---
+
+Soft-deletes a candidate key so it can no longer be redeemed. The key is retained in the database for audit purposes but will not appear in list results.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID (UUID).
+</ParamField>
+
+<ParamField path="keyId" type="string" required>
+  The candidate key record ID (UUID).
+</ParamField>
+
+<ResponseField name="ok" type="boolean">
+  Always `true` on success.
+</ResponseField>
+
+<ResponseField name="id" type="string">
+  The deleted candidate key record ID.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "ok": true,
+  "id": "k1a2b3c4-d5e6-7890-abcd-ef1234567890"
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl -X DELETE https://api.promptster.ai/v1/assessments/a1b2c3d4-e5f6-7890-abcd-ef1234567890/keys/k1a2b3c4-d5e6-7890-abcd-ef1234567890 \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

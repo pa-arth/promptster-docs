@@ -1,0 +1,185 @@
+---
+title: "Greenhouse Setup"
+description: "Integrate Promptster assessment results into your Greenhouse ATS workflow."
+---
+
+This guide walks through a manual integration between Promptster and Greenhouse. You will create assessments via the Promptster API, store candidate keys in Greenhouse custom fields, and write results back to Greenhouse scorecards.
+
+<Note>
+A native Greenhouse integration is on the roadmap. This guide covers the API-based approach for teams that want to integrate now.
+</Note>
+
+## Prerequisites
+
+- A Promptster org API key with `read` and `write` scopes
+- A Greenhouse API key with candidate and scorecard permissions
+- A custom field in Greenhouse for storing the Promptster candidate key
+
+## 1. Set up Greenhouse custom fields
+
+In Greenhouse, create two custom candidate fields:
+
+- **Promptster Key** (text) -- stores the `PST-XXXX-XXXX` candidate key
+- **Promptster Session ID** (text) -- stores the session ID after redemption
+
+## 2. Create a Promptster assessment for each job
+
+When you open a new role in Greenhouse, create a matching Promptster assessment:
+
+```python
+import requests
+import os
+
+PROMPTSTER_KEY = os.environ["PROMPTSTER_API_KEY"]
+PROMPTSTER_BASE = "https://api.promptster.ai"
+
+def create_assessment_for_job(job_title, task_brief, repo_url):
+    res = requests.post(
+        f"{PROMPTSTER_BASE}/v1/assessments",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        json={
+            "title": f"Assessment: {job_title}",
+            "role": job_title,
+            "taskBrief": task_brief,
+            "repoUrl": repo_url,
+            "timeLimitMinutes": 90,
+            "expiresInDays": 14,
+        },
+    )
+    return res.json()["assessment"]["id"]
+```
+
+Store the assessment ID in your integration config, mapped to the Greenhouse job ID.
+
+## 3. Generate keys when candidates reach the assessment stage
+
+When a candidate moves to the "Technical Assessment" stage in Greenhouse, generate a Promptster key and store it on their profile:
+
+```python
+GREENHOUSE_KEY = os.environ["GREENHOUSE_API_KEY"]
+GREENHOUSE_BASE = "https://harvest.greenhouse.io/v1"
+
+def send_assessment(candidate_id, assessment_id, email, name):
+    # Generate Promptster key
+    res = requests.post(
+        f"{PROMPTSTER_BASE}/v1/assessments/{assessment_id}/keys",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        json={
+            "count": 1,
+            "candidateEmails": [email],
+            "candidateNames": [name],
+        },
+    )
+    key = res.json()["keys"][0]["key"]
+
+    # Store key on Greenhouse candidate profile
+    requests.patch(
+        f"{GREENHOUSE_BASE}/candidates/{candidate_id}",
+        auth=(GREENHOUSE_KEY, ""),
+        json={
+            "custom_fields": [
+                {"name_key": "promptster_key", "value": key}
+            ]
+        },
+    )
+
+    return key
+```
+
+## 4. Poll for results
+
+Run a periodic job (every 5 minutes) to check for completed sessions:
+
+```python
+def sync_results(assessment_id, greenhouse_job_id):
+    # Get all keys for this assessment
+    res = requests.get(
+        f"{PROMPTSTER_BASE}/v1/assessments/{assessment_id}/keys",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+    )
+    keys = res.json()["keys"]
+
+    for key in keys:
+        if key["status"] != "completed" or not key["sessionId"]:
+            continue
+        if not key["candidateEmail"]:
+            continue
+
+        # Fetch artifacts
+        artifacts_res = requests.get(
+            f"{PROMPTSTER_BASE}/v1/sessions/{key['sessionId']}/artifacts",
+            headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        )
+        artifacts = artifacts_res.json()["artifacts"]
+        by_kind = {a["kind"]: a["data"] for a in artifacts}
+
+        # Build scorecard data
+        summary = by_kind.get("candidate_summary", {})
+        data_points = by_kind.get("data_points_v1", {})
+        test_results = data_points.get("points", {}).get("testResults", {})
+
+        # Write to Greenhouse scorecard
+        write_greenhouse_scorecard(
+            greenhouse_job_id,
+            key["candidateEmail"],
+            summary=summary.get("headline", ""),
+            tests_passed=test_results.get("passed", 0),
+            tests_total=test_results.get("total", 0),
+            session_url=f"https://promptster.ai/dashboard/sessions/{key['sessionId']}",
+        )
+```
+
+## 5. Write Greenhouse scorecards
+
+Submit scores to Greenhouse using their scorecard API:
+
+```python
+def write_greenhouse_scorecard(job_id, candidate_email, summary, tests_passed, tests_total, session_url):
+    # Look up candidate by email
+    candidates = requests.get(
+        f"{GREENHOUSE_BASE}/candidates",
+        auth=(GREENHOUSE_KEY, ""),
+        params={"email": candidate_email},
+    ).json()
+
+    if not candidates:
+        return
+
+    candidate_id = candidates[0]["id"]
+
+    # Find the application for this job
+    applications = candidates[0].get("applications", [])
+    app = next((a for a in applications if a["jobs"] and a["jobs"][0]["id"] == job_id), None)
+    if not app:
+        return
+
+    # Submit scorecard
+    note = f"{summary}\n\nTests: {tests_passed}/{tests_total} passed\nFull session: {session_url}"
+
+    requests.post(
+        f"{GREENHOUSE_BASE}/applications/{app['id']}/scorecards",
+        auth=(GREENHOUSE_KEY, ""),
+        json={
+            "overall_recommendation": "yes" if tests_passed == tests_total and tests_total > 0 else "no_decision",
+            "attributes": [
+                {"name": "AI Collaboration", "rating": "yes", "type": "overall", "notes": note}
+            ],
+        },
+    )
+```
+
+<Tip>
+Store the Promptster session URL in the scorecard notes so reviewers can click through to the full replay view.
+</Tip>
+
+## Automation options
+
+For a fully automated pipeline, consider:
+
+- **Greenhouse webhooks**: Listen for `candidate_stage_change` events to trigger key generation
+- **Cron job**: Poll Promptster every 5 minutes for newly completed sessions
+- **Zapier/n8n**: Use HTTP request steps to connect the two APIs without custom code
+
+<Warning>
+Rate limits apply to both APIs. The Promptster API allows 300 requests per minute. Greenhouse's Harvest API has its own rate limits -- check their documentation.
+</Warning>

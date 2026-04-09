@@ -1,0 +1,211 @@
+---
+title: "Ashby Setup"
+description: "Integrate Promptster assessment results into your Ashby ATS workflow."
+---
+
+This guide covers integrating Promptster with Ashby's API. You will create assessments, sync candidate keys, and write results back to Ashby.
+
+<Note>
+A native Ashby integration is on the roadmap. This guide covers the API-based approach using Ashby's REST API.
+</Note>
+
+## Prerequisites
+
+- A Promptster org API key with `read` and `write` scopes
+- An Ashby API key (Settings > API Keys in Ashby)
+- An Ashby custom field for storing the Promptster candidate key
+
+## 1. Set up Ashby custom fields
+
+Create a custom field in Ashby for candidate records:
+
+```bash
+curl -X POST https://api.ashbyhq.com/customField.create \
+  -H "Authorization: Basic $(echo -n '$ASHBY_API_KEY:' | base64)" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Promptster Key",
+    "fieldType": "String",
+    "objectType": "Candidate"
+  }'
+```
+
+## 2. Create assessments
+
+Create a Promptster assessment for each job opening:
+
+```python
+import requests
+import os
+
+PROMPTSTER_KEY = os.environ["PROMPTSTER_API_KEY"]
+ASHBY_KEY = os.environ["ASHBY_API_KEY"]
+PROMPTSTER_BASE = "https://api.promptster.ai"
+ASHBY_BASE = "https://api.ashbyhq.com"
+
+def create_assessment(job_title, task_brief, repo_url):
+    res = requests.post(
+        f"{PROMPTSTER_BASE}/v1/assessments",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        json={
+            "title": f"Assessment: {job_title}",
+            "role": job_title,
+            "taskBrief": task_brief,
+            "repoUrl": repo_url,
+            "timeLimitMinutes": 90,
+        },
+    )
+    return res.json()["assessment"]["id"]
+```
+
+## 3. Send assessments to candidates
+
+When a candidate reaches the assessment stage in Ashby, generate a key and store it:
+
+```python
+from base64 import b64encode
+
+def ashby_headers():
+    encoded = b64encode(f"{ASHBY_KEY}:".encode()).decode()
+    return {
+        "Authorization": f"Basic {encoded}",
+        "Content-Type": "application/json",
+    }
+
+def send_assessment_to_candidate(candidate_id, assessment_id, email, name):
+    # Generate Promptster key
+    res = requests.post(
+        f"{PROMPTSTER_BASE}/v1/assessments/{assessment_id}/keys",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        json={
+            "count": 1,
+            "candidateEmails": [email],
+            "candidateNames": [name],
+        },
+    )
+    key_data = res.json()["keys"][0]
+
+    # Store key on Ashby candidate
+    requests.post(
+        f"{ASHBY_BASE}/candidate.update",
+        headers=ashby_headers(),
+        json={
+            "candidateId": candidate_id,
+            "customFields": [
+                {"fieldId": "promptster_key_field_id", "value": key_data["key"]}
+            ],
+        },
+    )
+
+    return key_data["key"]
+```
+
+## 4. Poll for completed sessions
+
+Check for newly completed sessions and write results back to Ashby:
+
+```python
+def sync_completed_sessions(assessment_id):
+    # Fetch all keys
+    res = requests.get(
+        f"{PROMPTSTER_BASE}/v1/assessments/{assessment_id}/keys",
+        headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+    )
+
+    for key in res.json()["keys"]:
+        if key["status"] != "completed" or not key["sessionId"]:
+            continue
+
+        # Fetch artifacts
+        artifacts_res = requests.get(
+            f"{PROMPTSTER_BASE}/v1/sessions/{key['sessionId']}/artifacts",
+            headers={"Authorization": f"Bearer {PROMPTSTER_KEY}"},
+        )
+        artifacts = {a["kind"]: a["data"] for a in artifacts_res.json()["artifacts"]}
+
+        summary = artifacts.get("candidate_summary", {})
+        data_points = artifacts.get("data_points_v1", {})
+        tests = data_points.get("points", {}).get("testResults", {})
+
+        # Add note to Ashby candidate
+        add_ashby_note(
+            key["candidateEmail"],
+            headline=summary.get("headline", "Assessment completed"),
+            tests_passed=tests.get("passed", 0),
+            tests_total=tests.get("total", 0),
+            session_id=key["sessionId"],
+        )
+```
+
+## 5. Write results to Ashby
+
+Add assessment results as a candidate note in Ashby:
+
+```python
+def add_ashby_note(candidate_email, headline, tests_passed, tests_total, session_id):
+    # Look up candidate by email
+    res = requests.post(
+        f"{ASHBY_BASE}/candidate.search",
+        headers=ashby_headers(),
+        json={"term": candidate_email},
+    )
+    candidates = res.json().get("results", [])
+    if not candidates:
+        return
+
+    candidate_id = candidates[0]["id"]
+    session_url = f"https://promptster.ai/dashboard/sessions/{session_id}"
+
+    note_content = (
+        f"**Promptster Assessment Result**\n\n"
+        f"{headline}\n\n"
+        f"Tests: {tests_passed}/{tests_total} passed\n"
+        f"[View full session replay]({session_url})"
+    )
+
+    requests.post(
+        f"{ASHBY_BASE}/note.create",
+        headers=ashby_headers(),
+        json={
+            "candidateId": candidate_id,
+            "note": note_content,
+            "type": "Assessment",
+        },
+    )
+```
+
+## Automation with Ashby webhooks
+
+Ashby supports webhooks for candidate stage changes. Set up a webhook to trigger when candidates move to your assessment stage:
+
+1. In Ashby, go to **Settings > Integrations > Webhooks**
+2. Add a webhook URL pointing to your integration service
+3. Subscribe to the `candidateStageChange` event
+4. In your handler, check if the new stage is your assessment stage and trigger key generation
+
+```python
+# Webhook handler (Flask example)
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.post("/ashby-webhook")
+def handle_ashby_webhook():
+    payload = request.json
+    if payload["type"] != "candidateStageChange":
+        return {"ok": True}
+
+    stage_name = payload["data"]["newInterviewStage"]["title"]
+    if stage_name != "Technical Assessment":
+        return {"ok": True}
+
+    candidate_id = payload["data"]["candidateId"]
+    # Look up candidate details and send assessment
+    # ...
+
+    return {"ok": True}
+```
+
+<Tip>
+Ashby's API uses `candidate.search` for email lookups and `note.create` for writing back results. These are the most reliable endpoints for integration.
+</Tip>

@@ -1,0 +1,106 @@
+---
+title: "Get Session Timeline"
+api: "GET /v1/sessions/:id/timeline"
+description: "Retrieve the timeline of events for a session with cursor-based pagination."
+---
+
+Returns the ordered timeline of events captured during a session. Events include prompts, commands, file diffs, decisions, and more. Supports cursor-based pagination via the `after` parameter.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ParamField query="limit" type="integer" default="500">
+  Number of events to return. Maximum 2000.
+</ParamField>
+
+<ParamField query="after" type="string">
+  Cursor for pagination. Pass the `id` of the last event from the previous page to get the next page.
+</ParamField>
+
+<ResponseField name="events" type="array">
+  List of timeline event objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Event ID (used as cursor for pagination).</ResponseField>
+    <ResponseField name="sessionId" type="string">Session ID.</ResponseField>
+    <ResponseField name="kind" type="string">
+      Event type. Common kinds: `prompt`, `command`, `file_diff`, `decision_event`, `thinking_pause`, `error_cascade_recovery`, `test_failure_pivot`.
+    </ResponseField>
+    <ResponseField name="ts" type="string">ISO 8601 event timestamp.</ResponseField>
+    <ResponseField name="data" type="object">Event payload (structure varies by `kind`).</ResponseField>
+    <ResponseField name="provenance" type="string | null">Event source information.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 ingestion timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="hasMore" type="boolean">
+  Whether there are more events beyond this page. Use the last event's `id` as the `after` cursor to fetch the next page.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "events": [
+    {
+      "id": "evt_001",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "kind": "prompt",
+      "ts": "2026-04-07T09:05:00.000Z",
+      "data": {
+        "prompt": "Fix the stale closure bug in the useEffect hook",
+        "tokenCount": 42
+      },
+      "provenance": "claude_code",
+      "createdAt": "2026-04-07T09:05:01.000Z"
+    },
+    {
+      "id": "evt_002",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "kind": "file_diff",
+      "ts": "2026-04-07T09:06:30.000Z",
+      "data": {
+        "path": "src/components/Counter.tsx",
+        "diff": "@@ -15,7 +15,7 @@\n-  useEffect(() => {\n+  useEffect(() => {\n+    // Fixed dependency array\n",
+        "linesAdded": 3,
+        "linesRemoved": 1
+      },
+      "provenance": "claude_code",
+      "createdAt": "2026-04-07T09:06:31.000Z"
+    },
+    {
+      "id": "evt_003",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "kind": "command",
+      "ts": "2026-04-07T09:07:00.000Z",
+      "data": {
+        "command": "npm test",
+        "exitCode": 0,
+        "human": true,
+        "source": "terminal"
+      },
+      "provenance": "shell_hook",
+      "createdAt": "2026-04-07T09:07:05.000Z"
+    }
+  ],
+  "hasMore": false
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl "https://api.promptster.ai/v1/sessions/sess_abc123/timeline?limit=100" \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

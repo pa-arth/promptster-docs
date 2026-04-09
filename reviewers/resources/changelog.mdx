@@ -1,0 +1,38 @@
+---
+title: "Changelog"
+description: "Version history and release notes for the Promptster API."
+---
+
+## v1.0.0
+
+**April 2026** -- Initial API release
+
+### Endpoints
+
+- **Assessments**: Create, list, get, and delete assessments
+- **Candidate keys**: Generate, list, and delete candidate keys with optional email invites
+- **Sessions**: List, get, and query sessions with filtering by assessment and source service
+- **Artifacts**: Retrieve all generated artifacts for a session
+- **Scores**: Read and write reviewer rubric scores
+- **Decisions**: Query decision events (accept/reject/edit of AI suggestions)
+- **Interview follow-ups**: Retrieve AI-generated follow-up questions
+- **Timeline**: Paginated access to the full event stream
+- **Cohort stats**: Aggregate metrics and percentile rankings across an assessment
+- **Candidates**: List all candidates across assessments with pagination
+- **API keys**: Create, list, and revoke org API keys
+
+### Artifact kinds
+
+- `analytics_v1` -- 40+ behavioral metrics
+- `data_points_v1` -- Aggregated work-style analysis with process descriptors
+- `prompt_analysis_v1` -- Five-dimension prompting strategy analysis
+- `tool_proficiency_v1` -- Seven-dimension AI tool proficiency scoring
+- `key_moments_v1` -- Identified turning points in the session
+- `test_results_v1` -- Automated test suite results
+- `candidate_summary` -- LLM-generated headline and body summary
+- `interview_followups_v1` -- Tailored follow-up questions for technical debrief
+
+### Authentication
+
+- Org API keys (`psk_live_...`) with `read` and `write` scopes
+- Bearer token authentication via `Authorization` header

@@ -1,0 +1,123 @@
+---
+title: "Webhooks"
+description: "Real-time notifications when assessment events occur. Coming soon -- with a polling recipe for now."
+---
+
+<Note>
+Webhook delivery is coming soon. This page documents the planned event shapes so you can design your integration now. In the meantime, use the polling recipe below.
+</Note>
+
+## Planned events
+
+### session.completed
+
+Fired when a candidate completes their session and all artifacts have been generated.
+
+```json
+{
+  "event": "session.completed",
+  "sessionId": "s1b2c3d4-5678-9abc-def0-1234567890ab",
+  "assessmentId": "a1b2c3d4-5678-9abc-def0-1234567890ab",
+  "candidateKey": "PST-A3K7-M9X2",
+  "completedAt": "2026-04-07T14:30:00.000Z",
+  "artifactsReady": true
+}
+```
+
+### assessment.key.redeemed
+
+Fired when a candidate redeems their key by running `promptster start`.
+
+```json
+{
+  "event": "assessment.key.redeemed",
+  "key": "PST-A3K7-M9X2",
+  "assessmentId": "a1b2c3d4-5678-9abc-def0-1234567890ab",
+  "candidateEmail": "jane@example.com",
+  "redeemedAt": "2026-04-07T12:00:00.000Z"
+}
+```
+
+## Polling recipe (interim)
+
+Until webhooks are available, poll the sessions endpoint to detect completed assessments.
+
+### Basic polling
+
+```python
+import requests
+import time
+import os
+
+API_KEY = os.environ["PROMPTSTER_API_KEY"]
+BASE = "https://api.promptster.ai"
+HEADERS = {"Authorization": f"Bearer {API_KEY}"}
+
+
+def poll_completed_sessions(assessment_id, interval_seconds=60):
+    """Poll for newly completed sessions."""
+    seen = set()
+
+    while True:
+        res = requests.get(
+            f"{BASE}/v1/sessions",
+            headers=HEADERS,
+            params={"assessmentId": assessment_id, "limit": 100},
+        )
+        res.raise_for_status()
+
+        for session in res.json()["sessions"]:
+            sid = session["id"]
+            if session["endedAt"] and sid not in seen:
+                seen.add(sid)
+                handle_completed_session(sid)
+
+        time.sleep(interval_seconds)
+
+
+def handle_completed_session(session_id):
+    """Process a completed session."""
+    # Wait briefly for artifact generation
+    time.sleep(45)
+
+    res = requests.get(
+        f"{BASE}/v1/sessions/{session_id}/artifacts",
+        headers=HEADERS,
+    )
+    artifacts = res.json()["artifacts"]
+    print(f"Session {session_id}: {len(artifacts)} artifacts ready")
+```
+
+### Key status polling
+
+To track when candidates redeem their keys:
+
+```python
+def poll_key_status(assessment_id):
+    """Check for newly redeemed keys."""
+    res = requests.get(
+        f"{BASE}/v1/assessments/{assessment_id}/keys",
+        headers=HEADERS,
+    )
+
+    for key in res.json()["keys"]:
+        if key["status"] == "active" and key["redeemedAt"]:
+            print(f"{key['candidateName']} started at {key['redeemedAt']}")
+        elif key["status"] == "completed":
+            print(f"{key['candidateName']} completed at {key['completedAt']}")
+```
+
+<Tip>
+A polling interval of 30-60 seconds is recommended. Shorter intervals provide faster detection but consume more API quota. The 300 req/min rate limit allows up to 5 assessments polled every second.
+</Tip>
+
+## Webhook configuration (planned)
+
+When webhooks launch, you will be able to configure them in the dashboard under **Settings > Webhooks** or via the API:
+
+- **Endpoint URL**: Your HTTPS endpoint that receives POST requests
+- **Events**: Select which events to subscribe to
+- **Secret**: HMAC-SHA256 signing secret for payload verification
+- **Retry policy**: Failed deliveries will be retried with exponential backoff (1m, 5m, 30m, 2h)
+
+Webhook payloads will include a `X-Promptster-Signature` header for verification.

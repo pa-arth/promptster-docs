@@ -1,0 +1,76 @@
+---
+title: "Get Session Decisions"
+api: "GET /v1/sessions/:id/decisions"
+description: "Retrieve all decision events captured during a session."
+---
+
+Returns all decision events from a session's timeline. Decisions are significant choices the candidate made during the assessment, captured by the CLI and optionally enriched by LLM analysis.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ResponseField name="decisions" type="array">
+  List of decision timeline event objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Event ID.</ResponseField>
+    <ResponseField name="sessionId" type="string">Session ID.</ResponseField>
+    <ResponseField name="kind" type="string">Always `decision_event`.</ResponseField>
+    <ResponseField name="ts" type="string">ISO 8601 timestamp of the decision.</ResponseField>
+    <ResponseField name="data" type="object">
+      Decision payload.
+      <Expandable title="properties">
+        <ResponseField name="title" type="string">Short description of the decision.</ResponseField>
+        <ResponseField name="context" type="string">What prompted the decision.</ResponseField>
+        <ResponseField name="rationale" type="string">Why the candidate chose this option.</ResponseField>
+        <ResponseField name="chosenOption" type="string">The option the candidate selected.</ResponseField>
+        <ResponseField name="tradeoffs" type="string">Tradeoffs considered.</ResponseField>
+        <ResponseField name="impactScore" type="number">Impact score (0-1).</ResponseField>
+        <ResponseField name="severity" type="string">Severity level.</ResponseField>
+        <ResponseField name="category" type="string">Decision category.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "decisions": [
+    {
+      "id": "evt_dec123",
+      "sessionId": "sess_abc123",
+      "orgId": "org_2abc123",
+      "kind": "decision_event",
+      "ts": "2026-04-07T09:25:00.000Z",
+      "data": {
+        "title": "Chose useReducer over useState for complex state",
+        "context": "The component needed to manage multiple interdependent state values.",
+        "rationale": "useReducer provides more predictable state transitions and avoids the stale closure issues seen with useState.",
+        "chosenOption": "useReducer with typed actions",
+        "tradeoffs": "Slightly more boilerplate but better type safety and testability.",
+        "impactScore": 0.8,
+        "severity": "high",
+        "category": "architecture"
+      },
+      "createdAt": "2026-04-07T09:25:00.000Z"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/sessions/sess_abc123/decisions \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

@@ -7,11 +7,21 @@
     "light": "#FBBF24",
     "dark": "#D97706"
   },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/pa-arth/promptster-backend"
+  "api": {
+    "baseUrl": "https://api.promptster.ai",
+    "auth": {
+      "method": "bearer"
     }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://promptster.ai/dashboard"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Sign Up",
+    "url": "https://promptster.ai/signup"
   },
   "navigation": {
     "tabs": [
@@ -53,30 +63,102 @@
             ]
           },
           {
-            "group": "Assessments",
+            "group": "Understanding Sessions",
             "pages": [
-              "reviewers/assessments/create",
-              "reviewers/assessments/candidate-keys",
-              "reviewers/assessments/cohort-stats"
+              "reviewers/sessions/overview",
+              "reviewers/sessions/signals"
             ]
           },
           {
-            "group": "Session Review",
+            "group": "Guides",
             "pages": [
-              "reviewers/sessions/overview",
-              "reviewers/sessions/timeline",
-              "reviewers/sessions/decisions",
-              "reviewers/sessions/signals"
+              "reviewers/guides/run-assessment",
+              "reviewers/guides/retrieve-results",
+              "reviewers/guides/interpret-artifacts",
+              "reviewers/guides/cohort-analysis",
+              "reviewers/guides/greenhouse-setup",
+              "reviewers/guides/ashby-setup"
             ]
           },
           {
             "group": "API Reference",
             "pages": [
-              "reviewers/api/authentication",
-              "reviewers/api/assessments",
-              "reviewers/api/sessions",
-              "reviewers/api/hooks",
+              "reviewers/api/authentication"
+            ]
+          },
+          {
+            "group": "Assessments",
+            "pages": [
+              "reviewers/api/assessments/create",
+              "reviewers/api/assessments/list",
+              "reviewers/api/assessments/get",
+              "reviewers/api/assessments/delete",
+              "reviewers/api/assessments/generate-keys",
+              "reviewers/api/assessments/list-keys",
+              "reviewers/api/assessments/delete-key",
+              "reviewers/api/assessments/cohort-stats"
+            ]
+          },
+          {
+            "group": "Sessions",
+            "pages": [
+              "reviewers/api/sessions/list",
+              "reviewers/api/sessions/get",
+              "reviewers/api/sessions/artifacts",
+              "reviewers/api/sessions/analytics",
+              "reviewers/api/sessions/prompt-analytics",
+              "reviewers/api/sessions/scores",
+              "reviewers/api/sessions/decisions",
+              "reviewers/api/sessions/interview-followups",
+              "reviewers/api/sessions/timeline",
+              "reviewers/api/sessions/cohort-stats"
+            ]
+          },
+          {
+            "group": "Candidates",
+            "pages": [
+              "reviewers/api/candidates/list"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "reviewers/api/analytics/overview",
+              "reviewers/api/analytics/top-candidates"
+            ]
+          },
+          {
+            "group": "Problem Library",
+            "pages": [
+              "reviewers/api/issues/list",
+              "reviewers/api/issues/get"
+            ]
+          },
+          {
+            "group": "Hooks",
+            "pages": [
+              "reviewers/api/hooks/ingest"
+            ]
+          },
+          {
+            "group": "Branding",
+            "pages": [
               "reviewers/api/branding"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "reviewers/webhooks/overview"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "reviewers/resources/errors",
+              "reviewers/resources/pagination",
+              "reviewers/resources/rate-limits",
+              "reviewers/resources/changelog"
             ]
           }
         ]
@@ -86,15 +168,15 @@
   "favicon": "/images/card.png",
   "logo": "/images/card.png",
   "fonts": {
-    "family": "Sora",
-    "weight": 500,
     "heading": {
-      "family": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap  ",
-      "weight": 700
+      "family": "Space Grotesk",
+      "weight": 700,
+      "url": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
     },
     "body": {
-      "family": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap    ",
-      "weight": 500
+      "family": "Manrope",
+      "weight": 500,
+      "url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
     }
   },
   "footer": {

@@ -1,0 +1,70 @@
+---
+title: "List Assessments"
+api: "GET /v1/assessments"
+description: "List all assessments for your organization."
+---
+
+Returns all active (non-deleted) assessments for your organization, ordered by creation date. Each assessment includes linked OSS issue details if applicable.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ResponseField name="assessments" type="array">
+  List of assessment objects, each with an optional `issue` field containing linked OSS issue details.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "assessments": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "orgId": "org_2abc123",
+      "title": "React State Management Bug Fix",
+      "role": "Senior Frontend Engineer",
+      "taskBrief": "Fix the stale closure bug in the useEffect hook.",
+      "repoUrl": "https://github.com/acme/frontend-challenge",
+      "issueId": null,
+      "timeLimitMinutes": 60,
+      "tokenBudgetUsd": 25.0,
+      "expiresInDays": 7,
+      "createdAt": "2026-04-07T10:30:00.000Z",
+      "updatedAt": "2026-04-07T10:30:00.000Z",
+      "issue": null
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "orgId": "org_2abc123",
+      "title": "TypeScript Generics Challenge",
+      "role": "Backend Engineer",
+      "taskBrief": "Implement a type-safe event emitter with generic constraints.",
+      "repoUrl": null,
+      "issueId": "iss_xyz789",
+      "timeLimitMinutes": 90,
+      "tokenBudgetUsd": null,
+      "expiresInDays": 14,
+      "createdAt": "2026-04-06T08:00:00.000Z",
+      "updatedAt": "2026-04-06T08:00:00.000Z",
+      "issue": {
+        "id": "iss_xyz789",
+        "title": "Type-safe event emitter",
+        "language": "typescript",
+        "difficulty": "medium"
+      }
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

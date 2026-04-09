@@ -1,0 +1,118 @@
+---
+title: "Pagination"
+description: "How list endpoints handle pagination with limit and offset parameters."
+---
+
+All list endpoints in the Promptster API use limit/offset pagination.
+
+## Parameters
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `limit` | integer | `20` | `100` | Number of items to return per page |
+| `offset` | integer | `0` | -- | Number of items to skip |
+
+<Note>
+The `GET /v1/candidates` endpoint uses a default limit of `50` and a max of `200`. All other list endpoints default to `20` with a max of `100`.
+</Note>
+
+## Response format
+
+All paginated responses include metadata alongside the results:
+
+```json
+{
+  "sessions": [...],
+  "total": 47,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `total` | Total number of matching items across all pages |
+| `limit` | The limit that was applied |
+| `offset` | The offset that was applied |
+
+## Iterating through pages
+
+To fetch all items, increment `offset` by `limit` until you have retrieved `total` items:
+
+```python
+import requests
+import os
+
+API_KEY = os.environ["PROMPTSTER_API_KEY"]
+HEADERS = {"Authorization": f"Bearer {API_KEY}"}
+
+
+def fetch_all_sessions(assessment_id):
+    all_sessions = []
+    offset = 0
+    limit = 100
+
+    while True:
+        res = requests.get(
+            "https://api.promptster.ai/v1/sessions",
+            headers=HEADERS,
+            params={
+                "assessmentId": assessment_id,
+                "limit": limit,
+                "offset": offset,
+            },
+        )
+        data = res.json()
+        all_sessions.extend(data["sessions"])
+
+        if offset + limit >= data["total"]:
+            break
+        offset += limit
+
+    return all_sessions
+```
+
+## Timeline pagination
+
+The `GET /v1/sessions/:id/timeline` endpoint uses cursor-based pagination instead of offset-based, since timelines can be very large:
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `limit` | integer | `500` | `2000` | Number of events to return |
+| `after` | string | -- | -- | Event ID to start after (cursor) |
+
+Response:
+
+```json
+{
+  "events": [...],
+  "hasMore": true
+}
+```
+
+To paginate, pass the `id` of the last event as the `after` parameter:
+
+```python
+def fetch_all_timeline_events(session_id):
+    all_events = []
+    after = None
+
+    while True:
+        params = {"limit": 2000}
+        if after:
+            params["after"] = after
+
+        res = requests.get(
+            f"https://api.promptster.ai/v1/sessions/{session_id}/timeline",
+            headers=HEADERS,
+            params=params,
+        )
+        data = res.json()
+        all_events.extend(data["events"])
+
+        if not data["hasMore"]:
+            break
+        after = data["events"][-1]["id"]
+
+    return all_events
+```

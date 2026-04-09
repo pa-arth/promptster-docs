@@ -1,0 +1,68 @@
+---
+title: "Prompt Analytics"
+api: "GET /v1/sessions/:id/prompt-analytics"
+description: "Retrieve AI-generated prompt analysis for a session."
+---
+
+Returns the `prompt_analysis_v1` artifact which contains AI-assessed prompt quality, strategy tier, trajectory narrative, and per-prompt analysis. This artifact is generated asynchronously by the worker pipeline using Claude Sonnet.
+
+If the artifact is still being computed, a `202` status is returned.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ResponseField name="promptAnalytics" type="object">
+  The prompt analysis payload (returned on `200`). Contains strategy assessment, per-prompt breakdowns, and overall trajectory narrative.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Only present on `202` — indicates the artifact is still being generated. Value: `computing`.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Only present on `202` — human-readable status message.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "promptAnalytics": {
+    "strategyTier": "strong",
+    "trajectoryNarrative": "Candidate systematically narrowed the problem space, using targeted prompts to understand the codebase before attempting fixes.",
+    "processDescriptors": ["methodical", "investigative", "test-driven"],
+    "prompts": [
+      {
+        "index": 0,
+        "text": "Show me the useEffect hook in Counter.tsx",
+        "category": "exploration",
+        "quality": "good",
+        "reasoning": "Targeted file read to understand the existing implementation before making changes."
+      }
+    ]
+  }
+}
+```
+
+```json 202
+{
+  "status": "computing",
+  "message": "Prompt analysis is still being generated. Try again in 30 seconds."
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/sessions/sess_abc123/prompt-analytics \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

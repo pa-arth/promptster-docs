@@ -1,0 +1,87 @@
+---
+title: "Generate Candidate Keys"
+api: "POST /v1/assessments/:id/keys"
+description: "Generate candidate keys for an assessment. Optionally send invite emails."
+---
+
+Generates one or more candidate keys (`PST-XXXX-XXXX`) for an assessment. Each key is a unique invite that a candidate uses to start their session via the Promptster CLI.
+
+When `candidateEmails` are provided, invite emails are sent automatically via Loops with instructions on how to get started.
+
+### Authentication
+
+Requires an org API key with an active subscription.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID (UUID).
+</ParamField>
+
+<ParamField body="count" type="integer" required>
+  Number of keys to generate. Must be between 1 and 50.
+</ParamField>
+
+<ParamField body="candidateEmails" type="string[]">
+  Email addresses for each candidate. When provided, invite emails are sent automatically. Array length should match `count`.
+</ParamField>
+
+<ParamField body="candidateNames" type="string[]">
+  Display names for each candidate. Array length should match `count`.
+</ParamField>
+
+<ParamField body="orgName" type="string">
+  Your organization name, included in the invite email for context.
+</ParamField>
+
+<ResponseField name="keys" type="array">
+  List of generated candidate key objects.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Unique key record ID (UUID).</ResponseField>
+    <ResponseField name="key" type="string">The candidate key (e.g. `PST-ABCD-1234`).</ResponseField>
+    <ResponseField name="candidateEmail" type="string | null">Candidate's email if provided.</ResponseField>
+    <ResponseField name="candidateName" type="string | null">Candidate's name if provided.</ResponseField>
+    <ResponseField name="status" type="string">Key status: `pending`, `active`, `completed`, or `expired`.</ResponseField>
+    <ResponseField name="expiresAt" type="string">ISO 8601 expiration timestamp.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 creation timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 201
+{
+  "keys": [
+    {
+      "id": "k1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "key": "PST-ABCD-1234",
+      "assessmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "orgId": "org_2abc123",
+      "candidateEmail": "jane@example.com",
+      "candidateName": "Jane Smith",
+      "status": "pending",
+      "sessionId": null,
+      "expiresAt": "2026-04-14T10:30:00.000Z",
+      "redeemedAt": null,
+      "completedAt": null,
+      "createdAt": "2026-04-07T10:30:00.000Z"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl -X POST https://api.promptster.ai/v1/assessments/a1b2c3d4-e5f6-7890-abcd-ef1234567890/keys \
+  -H "Authorization: Bearer psk_live_abc123def456" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "count": 1,
+    "candidateEmails": ["jane@example.com"],
+    "candidateNames": ["Jane Smith"],
+    "orgName": "Acme Corp"
+  }'
+```
+</RequestExample>

@@ -1,0 +1,87 @@
+---
+title: "Assessment Cohort Stats"
+api: "GET /v1/assessments/:id/cohort-stats"
+description: "Get aggregate metrics and percentile rankings across all sessions for an assessment."
+---
+
+Returns cohort-level statistics for an assessment, including averages and optional percentile ranks for a specific candidate's session. Use this to compare a candidate's performance against the cohort.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID.
+</ParamField>
+
+<ParamField query="sessionId" type="string">
+  Optional session ID. When provided, the response includes percentile ranks showing where this candidate falls relative to the cohort.
+</ParamField>
+
+<ResponseField name="cohortStats" type="object | null">
+  Cohort statistics. Returns `null` if the assessment has no completed sessions.
+  <Expandable title="properties">
+    <ResponseField name="sessionCount" type="integer">Number of completed sessions in the cohort.</ResponseField>
+    <ResponseField name="metrics" type="object">
+      Cohort averages.
+      <Expandable title="properties">
+        <ResponseField name="avgDurationMs" type="number | null">Average session duration in milliseconds.</ResponseField>
+        <ResponseField name="avgPromptCount" type="number">Average prompts per session.</ResponseField>
+        <ResponseField name="avgCommandFailRate" type="number">Average command failure rate (0–1).</ResponseField>
+        <ResponseField name="avgVerifyIntensity" type="number">Average verification intensity score.</ResponseField>
+        <ResponseField name="avgManualEditRatio" type="number">Average manual edit ratio (0–1).</ResponseField>
+        <ResponseField name="avgFirstChangeLatencyMs" type="number | null">Average time to first code change.</ResponseField>
+        <ResponseField name="testPassRate" type="number">Fraction of sessions that passed all tests.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="percentiles" type="object">
+      Percentile ranks for the specified `sessionId` (only present when `sessionId` is provided). Higher is better.
+      <Expandable title="properties">
+        <ResponseField name="durationMs" type="number | null">Duration percentile (0–100).</ResponseField>
+        <ResponseField name="promptCount" type="number | null">Prompt count percentile.</ResponseField>
+        <ResponseField name="commandFailRate" type="number | null">Command fail rate percentile.</ResponseField>
+        <ResponseField name="verifyIntensity" type="number | null">Verify intensity percentile.</ResponseField>
+        <ResponseField name="manualEditRatio" type="number | null">Manual edit ratio percentile.</ResponseField>
+        <ResponseField name="firstChangeLatencyMs" type="number | null">First change latency percentile.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "cohortStats": {
+    "sessionCount": 15,
+    "metrics": {
+      "avgDurationMs": 3120000,
+      "avgPromptCount": 16.3,
+      "avgCommandFailRate": 0.12,
+      "avgVerifyIntensity": 1.8,
+      "avgManualEditRatio": 0.28,
+      "avgFirstChangeLatencyMs": 110000,
+      "testPassRate": 0.73
+    },
+    "percentiles": {
+      "durationMs": 72,
+      "promptCount": 45,
+      "commandFailRate": 85,
+      "verifyIntensity": 68,
+      "manualEditRatio": 55,
+      "firstChangeLatencyMs": 80
+    }
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl "https://api.promptster.ai/v1/assessments/a1b2c3d4/cohort-stats?sessionId=sess_abc123" \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

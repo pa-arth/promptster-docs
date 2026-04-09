@@ -1,0 +1,81 @@
+---
+title: "Get Issue"
+api: "GET /v1/issues/:id"
+description: "Retrieve details for a specific issue from the problem library."
+---
+
+Returns full details for a single issue including its task brief, setup instructions, and metadata. Use this to preview an issue before linking it to an assessment.
+
+### Authentication
+
+Requires either an org API key or a Clerk JWT.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The issue ID.
+</ParamField>
+
+<ResponseField name="issue" type="object">
+  The issue object.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Issue ID (UUID).</ResponseField>
+    <ResponseField name="source" type="string">Source repository host.</ResponseField>
+    <ResponseField name="repoUrl" type="string">Repository URL.</ResponseField>
+    <ResponseField name="repoSlug" type="string | null">Short repo identifier.</ResponseField>
+    <ResponseField name="issueNumber" type="integer | null">Original issue/PR number.</ResponseField>
+    <ResponseField name="issueTitle" type="string">Issue title.</ResponseField>
+    <ResponseField name="issueUrl" type="string | null">Link to the original GitHub issue.</ResponseField>
+    <ResponseField name="issueBody" type="string">Full issue body/description.</ResponseField>
+    <ResponseField name="language" type="string">Primary language.</ResponseField>
+    <ResponseField name="difficulty" type="string">Difficulty level.</ResponseField>
+    <ResponseField name="skillTags" type="string[]">Skill tags.</ResponseField>
+    <ResponseField name="estimatedMinutes" type="integer | null">Estimated solve time.</ResponseField>
+    <ResponseField name="brokenSha" type="string">Git SHA where the bug exists.</ResponseField>
+    <ResponseField name="referenceSha" type="string">Git SHA with the known fix.</ResponseField>
+    <ResponseField name="taskBrief" type="string">Markdown task description.</ResponseField>
+    <ResponseField name="setupInstructions" type="string">Workspace setup instructions.</ResponseField>
+    <ResponseField name="isCustom" type="boolean">Whether this is a custom issue.</ResponseField>
+    <ResponseField name="status" type="string">Issue status.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
+    <ResponseField name="updatedAt" type="string">ISO 8601 timestamp.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "issue": {
+    "id": "iss_abc123",
+    "source": "github",
+    "repoUrl": "https://github.com/facebook/react",
+    "repoSlug": "facebook/react",
+    "issueNumber": 28347,
+    "issueTitle": "useEffect cleanup runs with stale closure",
+    "issueUrl": "https://github.com/facebook/react/issues/28347",
+    "issueBody": "When a component unmounts while an async operation is in flight...",
+    "language": "typescript",
+    "difficulty": "medium",
+    "skillTags": ["hooks", "closures", "state-management"],
+    "estimatedMinutes": 45,
+    "brokenSha": "a1b2c3d4e5f6",
+    "referenceSha": "f6e5d4c3b2a1",
+    "taskBrief": "Fix the stale closure bug in the useEffect cleanup function...",
+    "setupInstructions": "Run `npm install` then `npm test` to see the failing test.",
+    "isCustom": false,
+    "status": "active",
+    "createdAt": "2026-03-01T00:00:00.000Z",
+    "updatedAt": "2026-03-15T00:00:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/issues/iss_abc123 \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

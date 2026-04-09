@@ -1,0 +1,99 @@
+---
+title: "Top Candidates"
+api: "GET /v1/analytics/top-candidates"
+description: "Retrieve a ranked list of candidates with metrics, test results, and strategy assessments."
+---
+
+Returns all candidates across your organization with their session metrics, test results, strategy tier, and AI-generated process descriptors. Useful for building leaderboards or comparing candidates across assessments.
+
+### Authentication
+
+Requires a Clerk JWT (dashboard users only).
+
+```
+Authorization: Bearer sk_live_...
+```
+
+<ResponseField name="candidates" type="array">
+  List of candidate objects ranked by recency.
+  <Expandable title="properties">
+    <ResponseField name="candidateId" type="string">Candidate key ID.</ResponseField>
+    <ResponseField name="candidateName" type="string | null">Name provided during consent.</ResponseField>
+    <ResponseField name="candidateEmail" type="string | null">Email provided during consent.</ResponseField>
+    <ResponseField name="status" type="string">Key status (`pending`, `active`, `completed`, `expired`).</ResponseField>
+    <ResponseField name="completedAt" type="string | null">ISO 8601 completion timestamp.</ResponseField>
+    <ResponseField name="sessionId" type="string | null">Linked session ID.</ResponseField>
+    <ResponseField name="sourceService" type="string | null">Tool used (e.g. `claude_code`, `cursor`).</ResponseField>
+    <ResponseField name="assessmentId" type="string | null">Assessment ID.</ResponseField>
+    <ResponseField name="assessmentTitle" type="string | null">Assessment title.</ResponseField>
+    <ResponseField name="totalCostUsd" type="number | null">Total LLM token cost in USD.</ResponseField>
+    <ResponseField name="durationMinutes" type="number | null">Session duration in minutes.</ResponseField>
+    <ResponseField name="testResults" type="object | null">
+      Test suite results.
+      <Expandable title="properties">
+        <ResponseField name="passed" type="integer">Tests passed.</ResponseField>
+        <ResponseField name="failed" type="integer">Tests failed.</ResponseField>
+        <ResponseField name="total" type="integer">Total tests.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="metrics" type="object">
+      Session-level behavioral metrics.
+      <Expandable title="properties">
+        <ResponseField name="promptCount" type="integer | null">Total prompts sent.</ResponseField>
+        <ResponseField name="commandCount" type="integer | null">Total terminal commands.</ResponseField>
+        <ResponseField name="fileDiffCount" type="integer | null">Total file changes.</ResponseField>
+        <ResponseField name="verifyIntensity" type="number | null">How often the candidate verified AI output.</ResponseField>
+        <ResponseField name="commandFailRate" type="number | null">Fraction of commands that failed (0–1).</ResponseField>
+        <ResponseField name="manualEditRatio" type="number | null">Fraction of edits made manually vs. AI-generated (0–1).</ResponseField>
+        <ResponseField name="firstChangeLatencyMs" type="number | null">Time to first code change in milliseconds.</ResponseField>
+        <ResponseField name="errorEpisodes" type="integer | null">Number of error recovery episodes.</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="strategyTier" type="string | null">AI-assessed strategy tier (`strong`, `adequate`, `developing`, `insufficient`).</ResponseField>
+    <ResponseField name="trajectoryNarrative" type="string | null">AI-generated one-line summary of the candidate's approach.</ResponseField>
+    <ResponseField name="processDescriptors" type="string[]">Short labels describing the candidate's working style (e.g. `iterative`, `test-driven`).</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "candidates": [
+    {
+      "candidateId": "ck_abc123",
+      "candidateName": "Jane Smith",
+      "candidateEmail": "jane@example.com",
+      "status": "completed",
+      "completedAt": "2026-04-07T10:15:00.000Z",
+      "sessionId": "sess_abc123",
+      "sourceService": "claude_code",
+      "assessmentId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "assessmentTitle": "React State Management Bug Fix",
+      "totalCostUsd": 3.42,
+      "durationMinutes": 48.5,
+      "testResults": { "passed": 12, "failed": 0, "total": 12 },
+      "metrics": {
+        "promptCount": 18,
+        "commandCount": 24,
+        "fileDiffCount": 9,
+        "verifyIntensity": 2.5,
+        "commandFailRate": 0.08,
+        "manualEditRatio": 0.35,
+        "firstChangeLatencyMs": 120000,
+        "errorEpisodes": 1
+      },
+      "strategyTier": "strong",
+      "trajectoryNarrative": "Methodically traced the bug, verified each fix with tests before moving on.",
+      "processDescriptors": ["methodical", "test-driven", "iterative"]
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/analytics/top-candidates \
+  -H "Authorization: Bearer sk_live_abc123def456"
+```
+</RequestExample>

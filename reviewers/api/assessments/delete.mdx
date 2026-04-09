@@ -1,0 +1,43 @@
+---
+title: "Delete Assessment"
+api: "DELETE /v1/assessments/:id"
+description: "Soft-delete an assessment and all its candidate keys."
+---
+
+Soft-deletes the assessment and all associated candidate keys. Deleted assessments no longer appear in list results but are retained in the database for audit purposes.
+
+### Authentication
+
+Requires an org API key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID (UUID).
+</ParamField>
+
+<ResponseField name="ok" type="boolean">
+  Always `true` on success.
+</ResponseField>
+
+<ResponseField name="id" type="string">
+  The deleted assessment ID.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "ok": true,
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl -X DELETE https://api.promptster.ai/v1/assessments/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

@@ -1,0 +1,59 @@
+---
+title: "Get Assessment"
+api: "GET /v1/assessments/:id"
+description: "Retrieve a single assessment by ID."
+---
+
+Returns the full assessment object including linked OSS issue details if applicable.
+
+### Authentication
+
+Requires either an org API key or a candidate key (for CLI access).
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The assessment ID (UUID).
+</ParamField>
+
+<ResponseField name="assessment" type="object">
+  The assessment object with an `issue` field containing linked OSS issue details (or `null`).
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "assessment": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "orgId": "org_2abc123",
+    "title": "React State Management Bug Fix",
+    "role": "Senior Frontend Engineer",
+    "taskBrief": "Fix the stale closure bug in the useEffect hook.",
+    "repoUrl": "https://github.com/acme/frontend-challenge",
+    "issueId": "iss_xyz789",
+    "timeLimitMinutes": 60,
+    "tokenBudgetUsd": 25.0,
+    "expiresInDays": 7,
+    "createdAt": "2026-04-07T10:30:00.000Z",
+    "updatedAt": "2026-04-07T10:30:00.000Z",
+    "issue": {
+      "id": "iss_xyz789",
+      "title": "Stale closure in useEffect",
+      "language": "typescript",
+      "difficulty": "medium",
+      "repoUrl": "https://github.com/acme/frontend-challenge",
+      "brokenSha": "abc123def456"
+    }
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/assessments/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

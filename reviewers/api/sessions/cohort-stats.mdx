@@ -1,0 +1,83 @@
+---
+title: "Get Cohort Stats"
+api: "GET /v1/sessions/:id/cohort-stats"
+description: "Get percentile comparison of a session against its assessment cohort."
+---
+
+Returns aggregate metrics across all completed sessions for the same assessment, plus percentile ranks showing how this candidate compares to the cohort. Requires at least 2 completed sessions for percentile computation.
+
+### Authentication
+
+Requires either an org API key or a candidate key.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ResponseField name="cohortStats" type="object | null">
+  Cohort statistics, or `null` if no completed sessions exist for this assessment.
+  <Expandable title="properties">
+    <ResponseField name="sessionCount" type="integer">Number of completed sessions in the cohort.</ResponseField>
+    <ResponseField name="metrics" type="object">
+      Aggregate metrics across the cohort.
+      <Expandable title="properties">
+        <ResponseField name="avgDurationMs" type="number | null">Average session duration in milliseconds.</ResponseField>
+        <ResponseField name="avgPromptCount" type="number">Average number of prompts per session.</ResponseField>
+        <ResponseField name="avgCommandFailRate" type="number">Average command failure rate (0-1).</ResponseField>
+        <ResponseField name="avgVerifyIntensity" type="number">Average verification intensity score.</ResponseField>
+        <ResponseField name="avgManualEditRatio" type="number">Average ratio of manual vs AI edits.</ResponseField>
+        <ResponseField name="avgFirstChangeLatencyMs" type="number | null">Average time to first code change in milliseconds.</ResponseField>
+        <ResponseField name="testPassRate" type="integer">Percentage of candidates who passed all tests (0-100).</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="percentiles" type="object">
+      Percentile ranks for this candidate (0.0 = bottom, 1.0 = top). Only present when cohort has 2+ sessions.
+      <Expandable title="properties">
+        <ResponseField name="durationMs" type="number | null">Duration percentile.</ResponseField>
+        <ResponseField name="promptCount" type="number | null">Prompt count percentile.</ResponseField>
+        <ResponseField name="commandFailRate" type="number | null">Command fail rate percentile (higher = fewer failures).</ResponseField>
+        <ResponseField name="verifyIntensity" type="number | null">Verification intensity percentile.</ResponseField>
+        <ResponseField name="manualEditRatio" type="number | null">Manual edit ratio percentile.</ResponseField>
+        <ResponseField name="firstChangeLatencyMs" type="number | null">First change latency percentile.</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "cohortStats": {
+    "sessionCount": 5,
+    "metrics": {
+      "avgDurationMs": 3600000,
+      "avgPromptCount": 15.2,
+      "avgCommandFailRate": 0.082,
+      "avgVerifyIntensity": 2.1,
+      "avgManualEditRatio": 0.28,
+      "avgFirstChangeLatencyMs": 95000,
+      "testPassRate": 60
+    },
+    "percentiles": {
+      "durationMs": 0.75,
+      "promptCount": 0.5,
+      "commandFailRate": 0.25,
+      "verifyIntensity": 0.75,
+      "manualEditRatio": 0.5,
+      "firstChangeLatencyMs": 0.75
+    }
+  }
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/sessions/sess_abc123/cohort-stats \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>

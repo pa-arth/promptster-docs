@@ -1,0 +1,181 @@
+---
+title: "Errors"
+description: "Standard error codes and response format for the Promptster API."
+---
+
+All API errors return a JSON body with an `error` field and an optional `code` field for programmatic handling.
+
+## Error response format
+
+```json
+{
+  "error": "Human-readable error message",
+  "code": "machine_readable_code"
+}
+```
+
+Some validation errors include a `details` array with field-level information:
+
+```json
+{
+  "error": "Invalid request body",
+  "details": [
+    {
+      "code": "too_small",
+      "minimum": 1,
+      "type": "string",
+      "inclusive": true,
+      "exact": false,
+      "message": "String must contain at least 1 character(s)",
+      "path": ["title"]
+    }
+  ]
+}
+```
+
+## HTTP status codes
+
+### 400 Bad Request
+
+The request body is malformed or missing required fields.
+
+```json
+{
+  "error": "Invalid request body",
+  "details": [...]
+}
+```
+
+Common causes:
+- Missing required fields (`title`, `role`, `taskBrief`)
+- Invalid field types (string where number expected)
+- Values out of range (`timeLimitMinutes` must be positive)
+- `taskBrief` not provided and no `issueId` specified
+
+### 401 Unauthorized
+
+The API key is missing, invalid, expired, or revoked.
+
+```json
+{
+  "error": "Invalid or missing API key"
+}
+```
+
+Common causes:
+- Missing `Authorization` header
+- Malformed Bearer token
+- Revoked API key
+- Using a candidate key (`PST-XXXX`) instead of an org API key (`psk_live_...`)
+
+### 402 Payment Required
+
+The organization does not have an active subscription.
+
+```json
+{
+  "error": "Active subscription required",
+  "code": "no_subscription"
+}
+```
+
+Possible `code` values:
+
+| Code | Meaning |
+|------|---------|
+| `no_subscription` | No subscription exists for this organization |
+| `trial_expired` | Free trial period has ended |
+| `subscription_inactive` | Subscription is canceled or past due |
+
+### 403 Forbidden
+
+The API key lacks the required scope or the organization has exceeded its quota.
+
+```json
+{
+  "error": "Assessment quota exceeded",
+  "code": "quota_exceeded",
+  "used": 10,
+  "quota": 10
+}
+```
+
+Common causes:
+- API key has only `read` scope but the operation requires `write`
+- Monthly assessment quota exceeded
+
+### 404 Not Found
+
+The requested resource does not exist or does not belong to your organization.
+
+```json
+{
+  "error": "Assessment not found"
+}
+```
+
+Common causes:
+- Invalid or non-existent resource ID
+- Resource belongs to a different organization
+- Resource has been soft-deleted
+
+### 409 Conflict
+
+The resource already exists (e.g., creating a session with a duplicate ID).
+
+```json
+{
+  "error": "Session already exists",
+  "id": "existing-session-id"
+}
+```
+
+### 429 Too Many Requests
+
+Rate limit exceeded. See [Rate Limits](/reviewers/resources/rate-limits).
+
+```json
+{
+  "error": "Rate limit exceeded"
+}
+```
+
+Check the `x-ratelimit-reset` response header for when you can retry.
+
+### 500 Internal Server Error
+
+An unexpected error occurred on the server.
+
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+If you encounter persistent 500 errors, contact support with the request details and approximate timestamp.
+
+## Handling errors in code
+
+```python
+import requests
+
+res = requests.get(
+    "https://api.promptster.ai/v1/assessments/nonexistent-id",
+    headers={"Authorization": f"Bearer {api_key}"},
+)
+
+if res.status_code == 401:
+    raise Exception("API key is invalid or revoked")
+elif res.status_code == 402:
+    code = res.json().get("code")
+    raise Exception(f"Subscription issue: {code}")
+elif res.status_code == 404:
+    print("Resource not found")
+elif res.status_code == 429:
+    reset = res.headers.get("x-ratelimit-reset")
+    print(f"Rate limited. Retry after: {reset}")
+elif res.status_code >= 500:
+    print("Server error, retry with backoff")
+elif not res.ok:
+    print(f"Error {res.status_code}: {res.json().get('error')}")
+```

@@ -1,0 +1,103 @@
+---
+title: "Rate Limits"
+description: "API rate limiting policy, response headers, and how to handle 429 responses."
+---
+
+The Promptster API applies rate limits to ensure fair usage and platform stability.
+
+## Limits
+
+| Scope | Limit |
+|-------|-------|
+| Global (per IP) | 300 requests per minute |
+
+Rate limits apply across all endpoints and all API keys from the same IP address.
+
+## Rate limit headers
+
+Every API response includes rate limit headers:
+
+| Header | Description |
+|--------|-------------|
+| `x-ratelimit-limit` | Maximum requests allowed per window (e.g., `300`) |
+| `x-ratelimit-remaining` | Requests remaining in the current window |
+| `x-ratelimit-reset` | Unix timestamp (seconds) when the window resets |
+
+Example response headers:
+
+```
+x-ratelimit-limit: 300
+x-ratelimit-remaining: 247
+x-ratelimit-reset: 1743955260
+```
+
+## 429 Too Many Requests
+
+When you exceed the rate limit, the API returns a `429` status code:
+
+```json
+{
+  "error": "Rate limit exceeded"
+}
+```
+
+The `x-ratelimit-reset` header tells you when you can resume making requests.
+
+## Handling rate limits
+
+### Retry with backoff
+
+```python
+import requests
+import time
+
+
+def api_request(url, headers, max_retries=3):
+    for attempt in range(max_retries):
+        res = requests.get(url, headers=headers)
+
+        if res.status_code != 429:
+            return res
+
+        # Use reset header if available, otherwise exponential backoff
+        reset = res.headers.get("x-ratelimit-reset")
+        if reset:
+            wait = max(int(reset) - int(time.time()), 1)
+        else:
+            wait = 2 ** attempt
+
+        print(f"Rate limited. Waiting {wait}s before retry.")
+        time.sleep(wait)
+
+    raise Exception("Rate limit retries exhausted")
+```
+
+### Check remaining quota
+
+```python
+def check_rate_limit(response):
+    remaining = int(response.headers.get("x-ratelimit-remaining", 0))
+    if remaining < 10:
+        print(f"Warning: only {remaining} requests remaining in this window")
+    return remaining
+```
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Batch operations where possible">
+    Generate multiple candidate keys in a single request (`count` up to 50) instead of making individual calls.
+  </Accordion>
+
+  <Accordion title="Cache responses">
+    Artifacts and session data are immutable after generation. Cache them locally to avoid redundant requests.
+  </Accordion>
+
+  <Accordion title="Use reasonable polling intervals">
+    When polling for completed sessions, 30-60 second intervals are sufficient. Shorter intervals waste quota without meaningful benefit.
+  </Accordion>
+
+  <Accordion title="Fetch in bulk">
+    Use list endpoints with `limit=100` to reduce the number of requests needed to iterate through large result sets.
+  </Accordion>
+</AccordionGroup>

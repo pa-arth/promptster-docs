@@ -1,0 +1,197 @@
+---
+title: "Retrieve Results"
+description: "Poll for completed sessions, fetch artifacts, and build a results pipeline."
+---
+
+After a candidate completes their assessment, Promptster's worker pipeline generates structured artifacts within 30-60 seconds. This guide shows how to detect completion and retrieve all available data.
+
+## Detect completed sessions
+
+Poll for sessions linked to an assessment:
+
+```bash
+curl "https://api.promptster.ai/v1/sessions?assessmentId=$ASSESSMENT_ID&limit=50" \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+A session is complete when `endedAt` is not null. The processing pipeline runs automatically after completion.
+
+<Tip>
+For a production integration, poll every 30-60 seconds. Webhook support is coming soon -- see [Webhooks](/reviewers/webhooks/overview) for the planned event shapes and a polling recipe.
+</Tip>
+
+## Fetch all artifacts
+
+Retrieve every artifact generated for a session:
+
+```bash
+curl https://api.promptster.ai/v1/sessions/$SESSION_ID/artifacts \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "artifacts": [
+    {
+      "id": "uuid",
+      "sessionId": "session-uuid",
+      "orgId": "org-uuid",
+      "kind": "analytics_v1",
+      "derivationV": 1,
+      "data": { ... },
+      "createdAt": "2026-04-07T12:00:00.000Z"
+    },
+    {
+      "kind": "prompt_analysis_v1",
+      "data": { ... }
+    },
+    {
+      "kind": "key_moments_v1",
+      "data": { ... }
+    }
+  ]
+}
+```
+
+Each artifact has:
+
+| Field | Description |
+|-------|-------------|
+| `kind` | Artifact type identifier (e.g., `analytics_v1`, `prompt_analysis_v1`) |
+| `derivationV` | Version of the derivation algorithm |
+| `data` | The artifact payload (structure varies by kind) |
+| `createdAt` | When the artifact was generated |
+
+## Artifact generation order
+
+Artifacts are generated in phases after session completion:
+
+| Phase | Delay | Artifacts |
+|-------|-------|-----------|
+| 1 | Immediate | `analytics_v1`, `key_moments_v1` |
+| 2 | ~5s | `data_points_v1` |
+| 3 | ~10s | `prompt_analysis_v1`, `tool_proficiency_v1` |
+| 4 | ~30s | `candidate_summary`, `interview_followups_v1` |
+
+<Note>
+Artifacts require a minimum amount of data to generate. Sessions with fewer than 3 prompts and 0 file diffs will have limited or no artifacts.
+</Note>
+
+## Fetch specific data
+
+In addition to the bulk artifacts endpoint, you can fetch specific data types:
+
+### Scores
+
+```bash
+curl https://api.promptster.ai/v1/sessions/$SESSION_ID/scores \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Returns reviewer rubric scores (if submitted) and the computed Prompter Score.
+
+### Interview follow-up questions
+
+```bash
+curl https://api.promptster.ai/v1/sessions/$SESSION_ID/interview-followups \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Returns AI-generated follow-up questions tailored to the candidate's session.
+
+### Decision events
+
+```bash
+curl https://api.promptster.ai/v1/sessions/$SESSION_ID/decisions \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Returns all decision events captured during the session (accept/reject/edit of AI suggestions).
+
+### Timeline events
+
+```bash
+curl "https://api.promptster.ai/v1/sessions/$SESSION_ID/timeline?limit=500" \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
+Returns the full event stream (prompts, file diffs, commands, decisions) in chronological order. Supports cursor-based pagination via the `after` parameter.
+
+## Build a results pipeline
+
+Here is a pattern for a production integration that processes completed sessions:
+
+```python
+import requests
+import time
+import os
+
+API_KEY = os.environ["PROMPTSTER_API_KEY"]
+BASE = "https://api.promptster.ai"
+HEADERS = {"Authorization": f"Bearer {API_KEY}"}
+
+def poll_for_completed_sessions(assessment_id, seen_sessions):
+    """Check for newly completed sessions."""
+    res = requests.get(
+        f"{BASE}/v1/sessions",
+        headers=HEADERS,
+        params={"assessmentId": assessment_id, "limit": 100},
+    )
+    res.raise_for_status()
+
+    new_completed = []
+    for session in res.json()["sessions"]:
+        if session["endedAt"] and session["id"] not in seen_sessions:
+            new_completed.append(session["id"])
+            seen_sessions.add(session["id"])
+
+    return new_completed
+
+
+def fetch_artifacts(session_id):
+    """Fetch all artifacts for a session."""
+    res = requests.get(
+        f"{BASE}/v1/sessions/{session_id}/artifacts",
+        headers=HEADERS,
+    )
+    res.raise_for_status()
+    return res.json()["artifacts"]
+
+
+def process_session(session_id):
+    """Wait for artifacts and process them."""
+    # Wait for the pipeline to finish (candidate_summary is last)
+    for attempt in range(10):
+        artifacts = fetch_artifacts(session_id)
+        kinds = {a["kind"] for a in artifacts}
+
+        if "candidate_summary" in kinds:
+            break
+
+        time.sleep(10)
+
+    # Extract what you need
+    by_kind = {a["kind"]: a["data"] for a in artifacts}
+
+    summary = by_kind.get("candidate_summary", {})
+    analytics = by_kind.get("analytics_v1", {})
+    analysis = by_kind.get("prompt_analysis_v1", {})
+
+    print(f"Session {session_id}:")
+    print(f"  Summary: {summary.get('headline', 'N/A')}")
+    print(f"  Prompts: {analytics.get('promptCount', 'N/A')}")
+    print(f"  Strategy: {analysis.get('strategies', {})}")
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Interpret artifacts" icon="magnifying-glass" href="/reviewers/guides/interpret-artifacts">
+    Detailed breakdown of every artifact kind and what the fields mean.
+  </Card>
+  <Card title="Cohort analysis" icon="chart-bar" href="/reviewers/guides/cohort-analysis">
+    Compare candidates with percentile rankings.
+  </Card>
+</CardGroup>

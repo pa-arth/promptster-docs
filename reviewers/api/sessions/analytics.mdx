@@ -1,0 +1,67 @@
+---
+title: "Session Analytics"
+api: "GET /v1/sessions/:id/analytics"
+description: "Retrieve the derived analytics artifact for a specific session."
+---
+
+Returns the `analytics_v1` artifact for a session, containing computed metrics like tool usage breakdowns, timing data, and behavioral patterns. This is the processed output from the worker pipeline.
+
+### Authentication
+
+Requires a Clerk JWT (dashboard users only).
+
+```
+Authorization: Bearer sk_live_...
+```
+
+<ParamField path="id" type="string" required>
+  The session ID.
+</ParamField>
+
+<ResponseField name="kind" type="string">
+  Artifact kind (always `analytics_v1`).
+</ResponseField>
+
+<ResponseField name="derivationV" type="integer">
+  Derivation version number.
+</ResponseField>
+
+<ResponseField name="analytics" type="object">
+  The analytics payload. Structure depends on the derivation version but typically includes tool usage counts, timing breakdowns, and event distributions.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp when the artifact was generated.
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "kind": "analytics_v1",
+  "derivationV": 1,
+  "analytics": {
+    "toolUsage": {
+      "Edit": 42,
+      "Bash": 31,
+      "Read": 28,
+      "Write": 7
+    },
+    "eventCounts": {
+      "prompt": 18,
+      "command": 24,
+      "file_diff": 15,
+      "decision_event": 3
+    },
+    "durationMs": 2910000
+  },
+  "createdAt": "2026-04-07T10:20:00.000Z"
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/sessions/sess_abc123/analytics \
+  -H "Authorization: Bearer sk_live_abc123def456"
+```
+</RequestExample>
