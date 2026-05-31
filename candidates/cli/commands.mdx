@@ -1,142 +1,140 @@
 ---
 title: "Commands"
-description: "All Promptster CLI commands — reference for candidates."
+description: "Every Promptster CLI command — reference for candidates."
 ---
 
-Run `promptster` with no arguments to open an interactive menu. Pass a command directly to skip the menu.
+Run `promptster` with no arguments to open an interactive menu, or pass a command directly:
 
 ```bash
 promptster <command> [flags]
 ```
 
-## Command reference
+The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`explain`**, and **`done`**. The rest are for checking status or recovering from a problem.
+
+## Core commands
 
 <AccordionGroup>
-  <Accordion title="promptster start <key>">
-    Redeems your assessment key, clones or prepares your workspace, configures Claude Code and Cursor hooks, and starts the session. This is the first command you run.
+  <Accordion title="promptster start <key> — begin your assessment">
+    Redeems your key, sets up your workspace, configures your editor, and starts the session. This is the first command you run.
 
     ```bash
     promptster start PST-ABCD-1234
     ```
 
-    The key format is `PST-XXXX-XXXX`. You can also run `promptster` with no arguments to get an interactive menu that prompts you for the key.
-
     **What `start` does:**
 
     <Steps>
-      <Step title="Redeems your key">Validates the key against the Promptster API and loads the session.</Step>
-      <Step title="Accepts terms of service">Prompts you to review and accept before proceeding.</Step>
-      <Step title="Prepares your workspace">Clones the starter repo (if provided) or lets you choose a workspace directory.</Step>
-      <Step title="Configures hooks">Writes Promptster hooks into your Claude Code and Cursor project settings so telemetry is captured automatically.</Step>
-      <Step title="Saves your session">Saves your session state locally and starts background event monitoring.</Step>
+      <Step title="Redeems your key & accepts terms">Validates the key, then walks you through the data-capture notice and the optional authorship-timing question.</Step>
+      <Step title="Prepares your workspace">Uses your current folder, a path you choose, or a fresh `~/promptster-test`. If the assessment includes a starter repo, it's cloned at the correct commit.</Step>
+      <Step title="Writes TASK.md">Saves the task brief to `TASK.md` and adds `.promptster/` to `.gitignore`.</Step>
+      <Step title="Configures hooks & proxy">Writes Claude Code / Cursor hooks into your workspace and routes the AI through the Promptster proxy (the hiring team covers the cost).</Step>
+      <Step title="Smoke-tests the proxy">Fires one tiny request so any auth/network problem surfaces now, not on your first prompt.</Step>
     </Steps>
 
     **Flags:**
 
     | Flag | Description |
     |------|-------------|
-    | `--accept-tos` | Accept the terms of service non-interactively (for scripted or CI use). |
-    | `--workspace PATH` | Use `PATH` as the workspace directory instead of prompting interactively. |
-
-    **Example — non-interactive:**
+    | `--accept-tos` | Accept the terms non-interactively (scripted/CI use). |
+    | `--workspace PATH` | Use `PATH` as the workspace instead of prompting. |
+    | `--restart` | Offer to restart a running editor so it reloads the new hooks. |
+    | `--verbose` | Print each setup sub-step (paths, proxy URL, hook events) for debugging. |
 
     ```bash
     promptster start PST-ABCD-1234 --accept-tos --workspace ~/my-assessment
     ```
 
-    <Note>
-      The task brief is also written to `TASK.md` in your workspace so Claude Code and Cursor can reference it directly.
-    </Note>
-  </Accordion>
-
-  <Accordion title="promptster done">
-    Submits your assessment. Uploads workspace code, flushes all buffered events, and marks the session complete.
-
-    ```bash
-    promptster done
-    ```
-
-    When submission succeeds, you receive a results link. The session state and hooks are cleaned up automatically.
-
     <Warning>
-      If you have queued decision items that still need rationale, `promptster done` will refuse to proceed. Run `promptster explain` to document them first.
+      After `start`, open Claude Code or Cursor **from the workspace directory in a new window**. Hooks are scoped to that folder — an editor that was already open won't capture your session. Use `--restart` (or restart your editor yourself) if it was already running.
     </Warning>
   </Accordion>
 
-  <Accordion title="promptster brief">
-    Shows the current task brief, time remaining, and workspace path. Use this to check the task description at any point during your assessment.
+  <Accordion title="promptster explain — record a decision">
+    Captures the *why* behind a choice. Three ways to use it:
 
     ```bash
-    promptster brief
+    promptster explain                              # opens an interactive editor
+    promptster explain "chose X over Y because..."  # inline, one-liner
+    promptster explain --last 30m                   # widen the recent-activity window
     ```
 
-    Alias: `promptster task`
-
-    The same information is also available in `TASK.md` in your workspace root.
-  </Accordion>
-
-  <Accordion title="promptster status">
-    Shows session info: session ID, start time, time elapsed, time remaining (if a limit is set), and the live event count fetched from the backend.
-
-    ```bash
-    promptster status
-    ```
-
-    Example output:
-
-    ```
-    ╭──────────────────────────────────────────────────────────────╮
-    │ Assessment Status                                            │
-    │                                                              │
-    │ Session ID:  sess_01abc...                                   │
-    │ Started:     2025-01-15 09:30:00                             │
-    │ Elapsed:     42m15s                                          │
-    │ Remaining:   17m45s                                          │
-    │ Events:      134                                             │
-    │ Status:      active                                          │
-    ╰──────────────────────────────────────────────────────────────╯
-    ```
-  </Accordion>
-
-  <Accordion title="promptster explain [--last <duration>]">
-    Opens an interactive terminal UI to document your decision rationale for recent work. Use this to capture the *why* behind significant architectural choices.
-
-    ```bash
-    promptster explain
-    promptster explain --last 30m
-    ```
-
-    **Flags:**
+    Inside Claude Code you can also use the `/explain` slash command, which calls this under the hood. The CLI shows a summary of your recent activity for context, then records your note as part of your session.
 
     | Flag | Default | Description |
     |------|---------|-------------|
-    | `--last <duration>` | `20m` | How far back to look for recent activity (e.g. `15m`, `30m`, `1h`). Max 60 minutes. |
+    | `--last <duration>` | `20m` | How far back to summarize recent activity (e.g. `15m`, `1h`). Clamped to 1–60 min. |
+    | `--quiet` | off | Suppress the activity box and styling. Used by the `/explain` slash command; you can use it for clean scripted output. |
 
-    When you run `promptster explain`, the CLI:
-
-    1. Fetches a summary of your recent activity (files changed, commands run) from the backend.
-    2. Displays the activity context in a box.
-    3. Opens a multi-line text editor — type your rationale, then press **Ctrl+D** to submit or **Esc** to cancel.
-
-    You can also pass rationale directly as an argument for quick one-liners:
-
-    ```bash
-    promptster explain "chose Postgres over SQLite because the task requires concurrent writes"
-    ```
-
-    See [Decisions](/candidates/cli/decisions) for more detail on how decision capture works.
+    See [Decisions](/candidates/cli/decisions) for the full workflow.
   </Accordion>
 
-  <Accordion title="promptster doctor">
-    Checks your local Promptster setup and reports the status of each component: CLI version, active session, Claude Code binary, project hooks, and PATH configuration.
+  <Accordion title="promptster brief — see your task (alias: task)">
+    Shows the task brief, time limit, time remaining, and workspace path.
+
+    ```bash
+    promptster brief
+    promptster brief --json   # machine-readable
+    ```
+
+    The same brief lives in `TASK.md` in your workspace. The assessment title is deliberately omitted so it can't leak hints about the solution.
+  </Accordion>
+
+  <Accordion title="promptster done — submit (flag: --auto)">
+    Bundles and uploads your workspace, flushes remaining events, and marks the session complete.
+
+    ```bash
+    promptster done
+    promptster done --auto   # skip the pending-decision check
+    ```
+
+    On success you get a results link (copied to your clipboard), and your hooks, shell hook, and proxy config are cleaned up automatically. The workspace is then safe to delete.
+
+    <Warning>
+      If you started decision notes that are still empty, `done` refuses to proceed until you finish them with `promptster explain` (or pass `--auto`). If the upload fails, `done` exits with an error rather than falsely reporting success — re-run it once your connection is back.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+## Status & diagnostics
+
+<AccordionGroup>
+  <Accordion title="promptster status — session info">
+    Session ID, start time, elapsed time, time remaining (if a limit is set), and the live event count the server has received.
+
+    ```bash
+    promptster status
+    promptster status --json
+    ```
+
+    Use the event count to confirm capture is working — it should climb as you prompt and edit. If it's stuck at zero, see [Troubleshooting](/candidates/troubleshooting#my-events-arent-being-captured).
+  </Accordion>
+
+  <Accordion title="promptster doctor — diagnose your setup">
+    Runs a full health check and prints each result with `✓` (pass) or `✗` (fail) plus a suggested fix. It checks:
+
+    - `git` and the `claude` binary are on your `PATH`
+    - the `promptster` binary is installed and `~/.promptster/bin` is on your `PATH`
+    - no conflicting `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` is exported in your shell (these break the proxy)
+    - your session is active and not expired, and the `apiKeyHelper` can resolve a token
+    - Claude Code hooks and the proxy config are present in your workspace
+    - the shell hook is installed and sourced
+    - the API is reachable and your session is fetchable
 
     ```bash
     promptster doctor
     ```
 
-    Each check is printed with a green `✓` (pass) or red `✗` (fail). Failed checks include a suggested fix command.
+    Run this first whenever something seems off.
+  </Accordion>
 
-    Run this first if hooks don't appear to be capturing events, or if `promptster start` behaves unexpectedly.
+  <Accordion title="promptster verify — check your session is tamper-evident">
+    Confirms that the events recorded for your session are cryptographically signed and form an unbroken chain.
+
+    ```bash
+    promptster verify
+    ```
+
+    Output is either `✓ N / N events signed · chain intact` or a clear failure. Sessions started with an older CLI may be unsigned, which the command reports plainly.
   </Accordion>
 
   <Accordion title="promptster version">
@@ -148,19 +146,56 @@ promptster <command> [flags]
   </Accordion>
 </AccordionGroup>
 
+## Recovery
+
+<AccordionGroup>
+  <Accordion title="promptster abort — discard without submitting (alias: cleanup)">
+    Tears down the current session, hooks, shell hook, and proxy config **without** submitting any code or completing the assessment.
+
+    ```bash
+    promptster abort
+    ```
+
+    Use this if you want to walk away from a session cleanly. It does not flip your key's status, so reach out to the hiring team if you intended to submit.
+  </Accordion>
+
+  <Accordion title="promptster reset [--purge] — fix a broken setup">
+    Like `abort`, but also sweeps leftover global config under `~/.promptster`. It resolves your workspace even when the session file is corrupt, so it works when nothing else does.
+
+    ```bash
+    promptster reset          # keep the installed binary
+    promptster reset --purge  # also remove the binary (full uninstall)
+    ```
+
+    See [Recovering from a broken setup](/candidates/troubleshooting#recovering-from-a-broken-setup).
+  </Accordion>
+
+  <Accordion title="promptster env --clear — clear stale Anthropic env vars">
+    Emits shell `unset` lines for `ANTHROPIC_*` variables left behind by an older session. Run it if `doctor` reports a conflicting export:
+
+    ```bash
+    eval "$(promptster env --clear)"
+    ```
+
+    (Bare `promptster env` is an internal session-expiry check — it prints nothing.)
+  </Accordion>
+</AccordionGroup>
+
 ## Interactive menu
 
-Running `promptster` with no arguments opens a numbered menu. You can type a menu number or paste your assessment key directly at the prompt — the CLI detects the `PST-` prefix automatically.
+Running `promptster` with no arguments opens a numbered menu. Type a number, or paste your `PST-XXXX-XXXX` key directly — the CLI detects the prefix and routes to `start`.
 
 ```
-  Promptster  v1.2.3
+  Promptster  v1.3.1
 
    1  Start assessment       Redeem a key and begin
    2  View task brief        Show the current task + time remaining
    3  Explain a decision     Document your rationale for recent work
    4  Check status           Show session info and event count
-   5  Submit assessment      Push code and complete the session
-   6  Help                   Show all available commands
+   5  Submit assessment      Upload code and complete the session
+   6  Run doctor             Diagnose your local setup
+   7  Abort assessment       Discard the session without submitting
+   8  Help                   Show all available commands
 
   ❯
 ```

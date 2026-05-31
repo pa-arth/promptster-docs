@@ -3,37 +3,60 @@ title: "Privacy & Data"
 description: "What Promptster captures during your assessment, how it's stored, and your rights."
 ---
 
-<Note>Your reviewer sees your process, not your secrets.</Note>
+<Note>Your reviewer sees your process, not your secrets. Capture is scoped to your assessment workspace and your AI coding tool — nothing else on your machine.</Note>
 
 ## What is captured
 
 | Category | What is recorded | Example |
 |---|---|---|
-| Prompts | Text of prompts you submit to the AI | "Refactor this function to use async/await" |
-| AI tool calls | Actions taken by the AI on your behalf | File edits, shell commands, web searches |
-| File changes | Unified diffs of files the AI creates or edits | +12 lines in auth.ts |
-| Shell commands | Command text and exit code | `pnpm test` → exit 0 |
-| Architecture decisions | Decision title, chosen option, and your rationale | "Use a message queue over polling for webhook ingestion" |
-| Session metadata | Start/end time, workspace path, tool version | Session started at 09:32 UTC |
+| Prompts | Text of prompts you send to the AI | "Refactor this function to use async/await" |
+| AI tool calls & responses | Actions the AI takes on your behalf, and its replies | File edits, shell commands, web searches |
+| File changes | Unified diffs of files created or edited in the workspace | `+12 / -3` in `auth.ts` |
+| Terminal commands | Command text and exit code, for commands run in the workspace | `pnpm test` → exit 0 |
+| File reads & searches | Which files you opened or searched | Opened `schema.ts` |
+| Decisions | The reasoning you record with `/explain` | "Used idempotency keys to handle Stripe retries safely" |
+| Session metadata | Start/end time, workspace path, CLI version | Session started 09:32 UTC |
+| Device fingerprint | A hashed, coarse device signature at key checkpoints | See [Device continuity](#device-continuity) |
 
 ## What is NOT captured
 
-- Keystrokes between prompts
-- File contents you never ask the AI to touch
+- Keystrokes between prompts, or any screen recording
+- File contents you never open, edit, or ask the AI to touch
 - Environment variables and secrets
-- Browser activity or anything outside your coding tool session
-- Clipboard contents
-- Your file system outside the workspace
+- Browser activity, or anything outside your coding tool session
+- Your clipboard
+- Your file system outside the assessment workspace
+
+## The optional authorship-timing layer
+
+At consent, after you accept the main terms, Promptster asks **one optional question**: whether to allow *cadence-based authorship checks*.
+
+If you say **yes**, Promptster records timing metadata — how long between your prompts and commands, and whether a long prompt arrived suddenly enough to look pasted rather than typed. This helps reviewers distinguish work you composed from work pasted in from elsewhere. **No keystrokes and no content are captured** — only timing and length signals.
+
+If you say **no**, you take the assessment normally; this layer is simply not recorded. It's genuinely optional.
+
+## Device continuity
+
+To confirm an assessment was completed by one person on a consistent setup, Promptster records a coarse device fingerprint at three checkpoints — consent, start, and submission. It's a hash of low-resolution signals (OS, architecture, CPU count, and *hashed* hostname/username), never your actual identifiers. It's used to flag continuity anomalies for the reviewer, not to identify you personally.
+
+## How your AI usage is handled
+
+During your assessment, Claude Code runs through the Promptster proxy so the hiring team can cover the cost and capture the session. The proxy forwards your requests to Anthropic and records the conversation as part of your session. Your personal Claude account is never billed, and the proxy is scoped to the assessment workspace — your other projects are unaffected.
 
 ## Data retention
 
-Data is retained for 90 days after your session ends. To request deletion, email [privacy@promptster.ai](mailto:privacy@promptster.ai).
+Your session data is retained for **30 days** after the session ends, then automatically deleted. To request earlier deletion, email [privacy@promptster.ai](mailto:privacy@promptster.ai).
+
+## Your rights — get a copy of your data
+
+You can request a machine-readable export of everything tied to your assessment (your session metadata, timeline, and the artifacts derived from it) using your assessment key. Contact the hiring team or [privacy@promptster.ai](mailto:privacy@promptster.ai) and we'll provide your data export.
 
 ## Who can see your data
 
 - The hiring team that created the assessment
-- Promptster staff for support purposes only
+- You — via your post-submission session replay link, and via a data-export request
+- Promptster staff, for support purposes only
 
 ## Attribution model
 
-Promptster tracks the *provenance* of changes — whether a change was likely AI-generated, human-initiated, or mixed. This is done using confidence levels, not exact authorship claims. Promptster does not make binary "AI wrote this / human wrote this" judgments.
+Promptster tracks the *provenance* of changes — whether a change was likely AI-generated or human-initiated — using confidence levels, not absolute claims. It does not make binary "an AI wrote this / a human wrote this" judgments, and provenance is one signal among many that a reviewer weighs.

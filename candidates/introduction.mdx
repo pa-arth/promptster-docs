@@ -3,34 +3,64 @@ title: "Introduction"
 description: "What Promptster is, why companies use it, and what to expect as a candidate."
 ---
 
-Promptster is a lightweight CLI tool that runs alongside your AI coding tool during a technical assessment. It captures a telemetry record of your session — the prompts you write, the changes the AI makes, and the decisions you explain — so the hiring team can evaluate how you work, not just the code you submit.
+Promptster is a lightweight CLI that runs alongside your AI coding tool during a technical assessment. It captures a record of your session — the prompts you write, the changes the AI makes, the commands you run, and the decisions you explain — so the hiring team can evaluate *how you work*, not just the code you submit.
 
-## Why companies use Promptster
+You install one binary, redeem a key, and work normally. Everything else happens in the background.
 
-Final code output is a poor signal on its own. Two candidates can produce similar results through very different processes. Promptster gives hiring teams an objective evidence trail of engineering judgment: how you break down a problem, what tradeoffs you consider, and how you direct an AI tool toward a goal.
+## You're judged on how you use AI, not whether you use it
 
-You are not being judged on whether you use AI. You are being judged on how well you use it.
+Final code output is a weak signal on its own. Two candidates can ship the same diff through completely different processes — one who understood every line and verified it, one who pasted whatever the model produced. Promptster gives the hiring team the evidence trail to tell those apart: how you decompose a problem, what you verify, where you push back on the AI, and why you made the tradeoffs you did.
+
+Use AI as much or as little as you like. There's no penalty for leaning on it heavily and no bonus for avoiding it. The signal is *judgment* — the quality of your direction and your verification.
 
 ## What the experience is like
 
-You work normally. Open your preferred AI coding tool (Claude Code or Cursor), follow the task brief, and write code as you usually would. Promptster runs in the background — you do not need to interact with it while you work.
+You work the way you normally would:
 
-The only exception is **decision capture**: when you make a significant architecture or tradeoff decision, you can run `promptster explain` to record your rationale in your own words. This is one of the most valuable signals a reviewer sees.
+<Steps>
+  <Step title="Install and start">
+    Install the CLI and run `promptster start PST-XXXX-XXXX`.
+  </Step>
+  <Step title="Build">
+    Open **Claude Code** or **Cursor** from your assessment workspace and solve the task.
+  </Step>
+  <Step title="Explain your decisions">
+    When you make a meaningful choice, run `/explain` (in Claude Code) or `promptster explain` to record your reasoning in your own words.
+  </Step>
+  <Step title="Submit">
+    Run `promptster done`. You get a link to your own session replay.
+  </Step>
+</Steps>
+
+The CLI captures telemetry quietly while you work — you don't interact with it between those steps. The one habit worth building is **explaining your decisions**: a sentence on *why* you chose an approach is one of the highest-signal things a reviewer sees.
+
+<Note>
+  During your assessment, Claude Code's API usage is routed through Promptster — **the hiring team covers the cost, not you.** You don't need a paid Claude plan, and if you already have one, you don't need to log out of it. See [Claude Code auth & billing](/candidates/troubleshooting#claude-code-auth-and-billing).
+</Note>
 
 ## Key concepts
 
 | Term | What it means |
 |------|---------------|
-| **Assessment key** | A one-time code in `PST-XXXX-XXXX` format, sent to you by email from the hiring team. You use it to start your session. |
-| **Session** | The active capture window from the moment you run `promptster start` until you run `promptster done`. |
-| **Decision** | An architecture or tradeoff choice you document using `promptster explain`. Reviewers read these alongside the code changes. |
+| **Assessment key** | A one-time code in `PST-XXXX-XXXX` format, emailed to you by the hiring team. You redeem it with `promptster start`. |
+| **Workspace** | The directory where you do the assessment. Hooks and the AI proxy are scoped to this folder — always open your editor *from here*. |
+| **Session** | The capture window, from `promptster start` until `promptster done` (or until the time limit runs out). |
+| **Decision** | An architecture or tradeoff choice you document with `/explain`. Reviewers read these alongside your code. |
+| **Task brief** | What you're being asked to build — shown by `promptster brief` and saved to `TASK.md` in your workspace. |
 
-## What is and is not recorded
+## What is and isn't recorded
 
-Promptster only records activity inside your AI coding tool session. It does not record keystrokes, clipboard contents, browser activity, or any file you never ask the AI to touch. See [Privacy & Data](/candidates/privacy) for the complete list.
+Promptster only records activity inside your assessment workspace and your AI coding tool. It does **not** record keystrokes, screen contents, your clipboard, browser activity, environment variables, or files outside the workspace.
+
+See [Privacy & Data](/candidates/privacy) for the complete list, including the optional authorship-timing layer you can decline at consent.
 
 ## Ready to begin?
 
-<Card title="Quick Start" icon="rocket" href="/candidates/quickstart">
-  Install the CLI, redeem your key, and start your assessment in under 5 minutes.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/candidates/quickstart">
+    Install, redeem your key, and start your assessment in under 5 minutes.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/candidates/troubleshooting">
+    Hooks not capturing? Auth errors? Fixes for every common snag.
+  </Card>
+</CardGroup>

@@ -36,7 +36,7 @@
             ]
           },
           {
-            "group": "CLI Reference",
+            "group": "Using the CLI",
             "pages": [
               "candidates/cli/install",
               "candidates/cli/commands",
@@ -44,10 +44,16 @@
             ]
           },
           {
+            "group": "Help",
+            "pages": [
+              "candidates/troubleshooting",
+              "candidates/faq"
+            ]
+          },
+          {
             "group": "Privacy & Data",
             "pages": [
-              "candidates/privacy",
-              "candidates/faq"
+              "candidates/privacy"
             ]
           }
         ]
