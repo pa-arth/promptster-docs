@@ -1,89 +1,99 @@
 ---
 title: "Quick Start"
-description: "Get started as a candidate in under 5 minutes."
+description: "Install, redeem your key, and start your assessment in under 5 minutes."
 ---
+
+This is the happy path from email to submission. If anything misbehaves along the way, [Troubleshooting](/candidates/troubleshooting) has a fix for every common snag — and `promptster doctor` will diagnose your setup at any point.
 
 <Steps>
   <Step title="Install the CLI">
-    Run the installer script:
-
     ```bash
     curl -fsSL https://get.promptster.ai | sh
     ```
 
-    If you prefer to install without the script, use npm directly:
+    The script downloads a single binary to `~/.promptster/bin/promptster` and adds it to your shell profile. Restart your shell (or run the `export PATH=...` line the installer prints) so `promptster` is on your `PATH`.
 
-    ```bash
-    npm install -g @promptster/cli
-    ```
-
-    Either method installs the `promptster` command globally on your machine.
+    Prefer npm? `npm install -g @promptster/cli` works too. See [Install](/candidates/cli/install) for details and verification.
   </Step>
 
   <Step title="Start your assessment">
-    Run `promptster start` with the assessment key from your email:
+    Run `promptster start` with the key from your invitation email:
 
     ```bash
     promptster start PST-XXXX-XXXX
     ```
 
-    Your key is in `PST-XXXX-XXXX` format and was sent to you by the hiring team. Replace `PST-XXXX-XXXX` with your actual key.
-
-    The CLI validates your key against the Promptster API and displays your assessment details — organization, title, and time limit — before continuing.
+    `start` validates the key, shows your assessment details (organization and time limit), and walks you through setup. The assessment *title* is intentionally hidden — the task brief is the single source of truth for what you're asked to do.
   </Step>
 
-  <Step title="Review and accept the data capture notice">
-    Before your session begins, the CLI shows you exactly what will and will not be recorded. Read it, then type `yes` to continue.
+  <Step title="Review and accept the data notice">
+    The CLI shows exactly what is and isn't captured, then asks you to type `yes` to accept the [terms of service](https://promptster.ai/terms).
 
-    **What IS captured:**
+    **Captured during your session:**
 
     | What | Example |
     |------|---------|
-    | Prompts you submit | "Refactor this function to use async/await" |
-    | Tool calls made by the AI | File edits, shell commands, web searches |
-    | Files the AI creates or edits | Unified diffs of every change |
-    | Shell commands run by the AI | Command text and exit code |
+    | Prompts you send to the AI | "Refactor this function to use async/await" |
+    | AI tool calls and responses | File edits, shell commands, web searches |
+    | Code changes (unified diffs) | `+12 / -3` in `auth.ts` |
+    | Terminal commands and exit codes | `pnpm test` → exit 0 |
+    | Which files you read or search | Opened `schema.ts` |
 
-    **What is NOT captured:**
+    **Never captured:** keystrokes, screen recordings, your clipboard, environment variables/secrets, or anything outside the workspace.
 
-    - Keystrokes between prompts
-    - File contents you never ask the AI to touch
-    - Environment variables and secrets
-    - Browser activity
-    - Clipboard contents
-
-    <Note>
-      Data is retained for 90 days. For deletion requests, contact privacy@promptster.ai.
-    </Note>
+    You'll then be asked one **optional** question — whether to allow *cadence-based authorship checks* (timing between your prompts and commands, to help reviewers distinguish typed work from pasted work). You can answer `no` and still take the assessment normally. See [Privacy & Data](/candidates/privacy).
   </Step>
 
-  <Step title="Work on your task">
-    Open your AI coding tool and start working. Claude Code and Cursor are auto-configured when `promptster start` runs — hooks are written at the project level, so capture begins automatically when you open the workspace.
+  <Step title="Choose your workspace">
+    `start` asks where to work. You can use the current folder, enter a custom path, or let it create a fresh `~/promptster-test` directory. If the assessment ships a starter repo, the CLI clones it at the correct commit for you.
 
-    The task brief is also saved as `TASK.md` in your workspace for easy reference.
+    It then writes your task to `TASK.md`, configures Claude Code / Cursor hooks, and routes the AI through the Promptster proxy. When setup finishes you'll see your task brief and the workspace path.
+  </Step>
 
-    **Documenting decisions:** When you make a significant architecture or tradeoff choice, run:
+  <Step title="Open your editor from the workspace — then build">
+    <Warning>
+      Open Claude Code (or Cursor) **from inside the workspace directory**, in a new editor window. Hooks and the AI proxy are scoped to that folder — an editor window that was already open, or one started from a different directory, will **not** be captured.
+    </Warning>
 
     ```bash
-    promptster explain
+    cd ~/promptster-test   # the workspace path start printed
+    claude                 # opens Claude Code here
     ```
 
-    This opens an interactive prompt where you describe your reasoning. Reviewers read these explanations alongside the code changes — it is one of the most valuable parts of your submission. You can also review the current task and time remaining at any time:
+    Now work normally. You don't need a paid Claude plan and you don't need to log out of one — Promptster covers the AI cost for the assessment. Check your task or time remaining anytime:
 
     ```bash
     promptster brief
     ```
   </Step>
 
-  <Step title="Submit when done">
-    When you have finished the task, run:
+  <Step title="Explain your key decisions">
+    When you make a meaningful choice — picking an approach, a data structure, a tradeoff — record *why* in your own words. Inside Claude Code, use the slash command:
 
+    ```
+    /explain chose idempotency keys over an app-level lock so Stripe retries are safe
+    ```
+
+    Or from any terminal in the workspace:
+
+    ```bash
+    promptster explain
+    ```
+
+    This is one of the most valuable parts of your submission. The CLI will also nudge you after a chunk of work if you haven't explained anything recently. See [Decisions](/candidates/cli/decisions).
+  </Step>
+
+  <Step title="Submit when done">
     ```bash
     promptster done
     ```
 
-    This flushes any buffered events to the server and marks your session complete. If you have any pending decision explanations that you started but did not finish, the CLI will prompt you to complete them before submitting.
+    This bundles and uploads your workspace, flushes remaining events, marks the session complete, and prints a link to your own session replay (it's copied to your clipboard). If you started decision notes but left them empty, `done` asks you to finish them first — or run `promptster done --auto` to skip that check.
 
-    Once submitted, your session is available for the hiring team to review.
+    Once submitted, the workspace is safe to delete and the hiring team is notified automatically.
   </Step>
 </Steps>
+
+<Note>
+  Your session data is retained for 30 days. To request deletion or a copy of your data, see [Privacy & Data](/candidates/privacy).
+</Note>

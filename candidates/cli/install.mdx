@@ -1,38 +1,40 @@
 ---
 title: "Install"
-description: "Install the Promptster CLI on macOS, Linux, or Windows (WSL)."
+description: "Install, update, and uninstall the Promptster CLI on macOS, Linux, or Windows (WSL)."
 ---
 
-The Promptster CLI is a single binary that configures your editor hooks, manages your session, and submits your assessment when you're done.
+The Promptster CLI is a single binary that configures your editor hooks, routes the AI through the assessment proxy, manages your session, and submits your work when you're done.
 
 ## System requirements
 
 - **macOS** (Intel or Apple Silicon), **Linux** (x64 or arm64), or **Windows via WSL**
-- `curl` or `wget` (for the install script)
-- Node.js is **not** required for the script install
+- `git` and a working **Claude Code** or **Cursor** install
+- `curl` or `wget` for the install script (Node.js is **not** required for the script install)
 
 ## Install
 
 <Tabs>
   <Tab title="Install script (recommended)">
-    Run the install script to download a pre-built binary directly to `~/.promptster/bin/promptster`:
+    Downloads a pre-built binary to `~/.promptster/bin/promptster`:
 
     ```bash
     curl -fsSL https://get.promptster.ai | sh
     ```
 
-    The script detects your OS and architecture, downloads the correct binary, and adds `~/.promptster/bin` to your shell profile (`.zshrc` or `.bashrc`).
+    The script detects your OS and architecture, fetches the matching binary, and adds `~/.promptster/bin` to your shell profile (`.zshrc` or `.bashrc`).
 
     <Note>
-      After install, restart your shell or run the export line the installer prints to make `promptster` available in your current session.
+      After install, restart your shell — or run the `export PATH=...` line the installer prints — so `promptster` is available in your current session.
     </Note>
   </Tab>
   <Tab title="npm">
-    If you already have Node.js installed, you can install via npm:
+    If you already have Node.js:
 
     ```bash
     npm install -g @promptster/cli
     ```
+
+    The npm package is a thin wrapper that installs the same binary.
   </Tab>
 </Tabs>
 
@@ -42,14 +44,44 @@ The Promptster CLI is a single binary that configures your editor hooks, manages
 promptster version
 ```
 
-You should see a version string like `1.2.3`. If the command is not found, make sure `~/.promptster/bin` is in your `PATH`:
+You should see a version string like `1.3.1`. If the command isn't found, add the bin directory to your `PATH`:
 
 ```bash
 export PATH="$HOME/.promptster/bin:$PATH"
 ```
 
-Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent.
+Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent. To confirm everything is wired up correctly — git, the `claude` binary, the bin path, and (once you've started) your hooks — run:
+
+```bash
+promptster doctor
+```
 
 ## Keeping the CLI up to date
 
-You don't need to update manually. Every time you run `promptster start`, the CLI checks for a newer version and upgrades itself automatically.
+Every time you run `promptster start`, the CLI checks the server for the minimum and latest supported versions:
+
+- If a newer version is **available**, it prints a one-line notice and continues.
+- If your version is **too old to be supported**, it stops and asks you to update before starting.
+
+The CLI does **not** upgrade itself silently. When prompted, update by re-running the installer:
+
+```bash
+curl -fsSL https://get.promptster.ai | sh
+# or, if you installed via npm:
+npm install -g @promptster/cli@latest
+```
+
+<Tip>
+  Update *before* you begin a timed assessment, not in the middle of one — a forced update on `start` is rare but you don't want to discover it on the clock.
+</Tip>
+
+## Uninstall
+
+`promptster done` automatically tears down your session hooks, the shell hook, and the AI proxy config when you submit. If you want to remove Promptster's local state manually:
+
+```bash
+promptster reset          # wipe session + hooks, keep the installed binary
+promptster reset --purge  # also remove the binary (full uninstall)
+```
+
+`reset` is also the recovery command if a setup ever gets into a bad state — see [Troubleshooting](/candidates/troubleshooting#recovering-from-a-broken-setup).

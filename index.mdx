@@ -1,19 +1,19 @@
 ---
 title: "Welcome to Promptster"
-description: "Objective AI coding assessments — capture real session telemetry to evaluate how candidates work, not just what they build."
+description: "Objective AI coding assessments — capture how candidates work with AI tools, not just what they ship."
 ---
 
-Promptster runs alongside Claude Code and Cursor during a coding assessment, capturing a detailed telemetry record of the session: prompts, file changes, commands, test runs, and architecture decisions. Hiring teams get an objective evidence trail to evaluate engineering judgment — not just final output.
+Promptster runs alongside Claude Code and Cursor during a coding assessment, capturing a record of the session: prompts, file changes, commands, test runs, and the candidate's own decision rationale. Hiring teams get an evidence trail to evaluate engineering judgment — not just final output.
 
 <CardGroup cols={2}>
   <Card title="Candidate Quickstart" icon="rocket" href="/candidates/quickstart">
     Install the CLI, redeem your key, and start your assessment in under 5 minutes.
   </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/candidates/troubleshooting">
+    Capture, auth, connectivity, and recovery — fixes for every common snag.
+  </Card>
   <Card title="Hiring Team Quickstart" icon="users" href="/reviewers/quickstart">
     Create your first assessment and generate candidate keys in minutes.
-  </Card>
-  <Card title="CLI Reference" icon="terminal" href="/candidates/cli/commands">
-    All Promptster CLI commands for candidates — start, submit, explain, and more.
   </Card>
   <Card title="API Reference" icon="code" href="/reviewers/api/authentication">
     REST API for managing assessments, sessions, and reviewing candidate data.
@@ -27,19 +27,19 @@ Promptster runs alongside Claude Code and Cursor during a coding assessment, cap
     Define the task brief, role, and time limit. Generate candidate keys to distribute.
   </Step>
   <Step title="Candidate redeems their key">
-    Run `promptster start PST-XXXX-XXXX`. The CLI configures Claude Code or Cursor to capture session telemetry automatically.
+    `promptster start PST-XXXX-XXXX` sets up the workspace and configures Claude Code or Cursor to capture the session — with the AI routed through Promptster, so the hiring team covers the cost.
   </Step>
   <Step title="Candidate completes the task">
-    Work normally using AI coding tools. Promptster captures prompts, file diffs, commands, and architecture decisions in the background.
+    They work normally. Promptster captures prompts, file diffs, commands, and the decisions they explain with `/explain`.
   </Step>
   <Step title="Candidate submits">
-    Run `promptster done` to flush all events and close the session.
+    `promptster done` uploads the workspace, closes the session, and returns a private replay link.
   </Step>
   <Step title="Hiring team reviews">
-    Browse the session timeline, review captured decisions, and examine derived signals to evaluate engineering judgment.
+    Browse the session timeline, read the candidate's decisions, and examine derived signals to evaluate engineering judgment.
   </Step>
 </Steps>
 
 <Note>
-  Promptster only captures what happens inside your AI coding tool session. Keystrokes, clipboard contents, browser activity, and environment variables are never recorded. See [Privacy & Data](/candidates/privacy) for the full list.
+  Promptster only captures activity inside the assessment workspace and AI coding tool. Keystrokes, screen contents, clipboard, browser activity, and environment variables are never recorded. Session data is retained for 30 days. See [Privacy & Data](/candidates/privacy).
 </Note>

@@ -1,0 +1,148 @@
+---
+title: "Troubleshooting"
+description: "Fixes for every common snag during a Promptster assessment — capture, auth, connectivity, and recovery."
+---
+
+When something seems off, start here:
+
+```bash
+promptster doctor
+```
+
+`doctor` checks your binary, `PATH`, session, hooks, proxy config, and connectivity, and prints a suggested fix for anything that fails. Most issues below are things `doctor` will point you straight at.
+
+## My events aren't being captured
+
+This is almost always because your editor isn't running inside the captured workspace. Capture is scoped to the workspace folder by design.
+
+<Steps>
+  <Step title="Confirm the event count is actually zero">
+    ```bash
+    promptster status
+    ```
+    The event count should climb as you send prompts and edit files. If it's moving, capture is working.
+  </Step>
+  <Step title="Open your editor from the workspace, in a new window">
+    Hooks live in `<workspace>/.claude/settings.local.json` (and `.cursor/hooks.json`). An editor window opened *before* `promptster start`, or started from a different directory, never loaded them.
+
+    ```bash
+    cd <your-workspace>
+    claude
+    ```
+
+    Fully quit and reopen Claude Code / Cursor if it was already running — or re-run `promptster start --restart`, which offers to restart it for you.
+  </Step>
+  <Step title="Re-run doctor">
+    ```bash
+    promptster doctor
+    ```
+    Check that the **Claude settings file** and **hook points** rows pass. If they don't, re-run `promptster start` from inside the workspace.
+  </Step>
+</Steps>
+
+<Note>
+  Terminal commands are only captured when run **inside the workspace directory**. Commands you run elsewhere are intentionally ignored.
+</Note>
+
+## Claude Code auth and billing
+
+During your assessment, Claude Code is routed through the Promptster proxy and **the hiring team pays for the usage** — you don't need a paid Claude plan.
+
+**You do *not* need to `/logout` of your own Claude subscription.** Promptster wires the proxy through Claude Code's `apiKeyHelper`, which out-ranks a logged-in Max/Pro subscription in Claude Code's credential order. The proxy wins automatically. (If an older guide told you to log out, that advice is obsolete as of CLI 1.3.1.)
+
+The **one** thing that *does* break the proxy is an Anthropic key exported in your shell — it out-ranks the helper:
+
+```bash
+# doctor will flag this if present:
+echo $ANTHROPIC_API_KEY $ANTHROPIC_AUTH_TOKEN
+```
+
+If either is set (often left over from your own projects or an older Promptster session), clear it for the session:
+
+```bash
+eval "$(promptster env --clear)"
+```
+
+Then reopen Claude Code. After setup, `promptster start` runs a tiny proxy smoke test — if that succeeded, your auth is good.
+
+## I got a 401 / "authentication" error on my first prompt
+
+Two likely causes, in order:
+
+1. **A shell-exported `ANTHROPIC_*` key** is overriding the proxy. Run `eval "$(promptster env --clear)"`, then reopen your editor. (See above.)
+2. **Your session has expired.** If your key's time window has passed, the proxy stops accepting it and the helper emits no token. Run `promptster doctor` — it explicitly checks for an expired session. If expired, you'll need a fresh key from the hiring team.
+
+Run `promptster doctor` first; it distinguishes these for you.
+
+## My internet dropped
+
+Keep working — the CLI records each event to a local buffer as it happens, so a brief disconnection won't interrupt your editor. Once you're back online, check that the server is receiving events:
+
+```bash
+promptster status
+```
+
+The event count reflects what the server has actually received. If you were offline during `promptster done`, the upload step will have failed loudly (it won't falsely report success) — just re-run `promptster done` once you're reconnected.
+
+## Can I pause and come back later?
+
+Yes. Your session stays open until you run `promptster done` or the time limit runs out. You can close and reopen your editor, restart your machine, and pick up where you left off — just remember to reopen the editor **from the workspace directory** so hooks reload.
+
+To resume, `cd` into your workspace and check where things stand:
+
+```bash
+cd <your-workspace>
+promptster status
+promptster brief
+```
+
+## What happens when the time limit runs out?
+
+If your assessment has a time limit, it's enforced server-side: when the window closes, your session is auto-submitted with whatever you've done so far. You won't lose work that was already captured. Run `promptster brief` to see your remaining time, and submit with `promptster done` before the buzzer if you can — a deliberate submission is cleaner than an automatic one.
+
+## I switched computers mid-assessment
+
+Promptster records a lightweight device fingerprint at consent, start, and submission to help reviewers confirm continuity (see [Privacy & Data](/candidates/privacy#device-continuity)). Working across machines isn't forbidden, but it's visible — if you must switch, it's worth a quick `/explain` note saying why. Your session and hooks live on a specific machine in a specific workspace, so you'd need to set the workspace up again on the new machine; reach out to the hiring team if you're unsure.
+
+## Recovering from a broken setup
+
+If hooks, the proxy, or the session file get into a confused state, reset and start clean:
+
+```bash
+promptster reset
+```
+
+This tears down the session, hooks, shell hook, RC source lines, and proxy config, and sweeps leftover `~/.promptster` state — while keeping the installed binary, so you don't have to reinstall. It works even when the session file is corrupt. Then:
+
+```bash
+promptster start PST-XXXX-XXXX
+```
+
+For a full uninstall (binary included), use `promptster reset --purge`.
+
+<Warning>
+  `reset` and `abort` do **not** submit your work or complete the assessment. If you meant to submit, use `promptster done`. If you've already done meaningful work and a reset would lose it, contact the hiring team before wiping anything.
+</Warning>
+
+## The `promptster` command isn't found
+
+The binary installs to `~/.promptster/bin`. Make sure it's on your `PATH`:
+
+```bash
+export PATH="$HOME/.promptster/bin:$PATH"
+```
+
+Add that to your `~/.zshrc` or `~/.bashrc` to make it stick, then restart your shell. See [Install](/candidates/cli/install).
+
+## `promptster start` says my CLI is too old
+
+The CLI checks for a minimum supported version on `start`. Update it and try again:
+
+```bash
+curl -fsSL https://get.promptster.ai | sh
+# or: npm install -g @promptster/cli@latest
+```
+
+## Still stuck?
+
+Run `promptster doctor` and copy its full output, then contact the hiring team or email [support@promptster.ai](mailto:support@promptster.ai). The doctor output tells us exactly what's misconfigured.

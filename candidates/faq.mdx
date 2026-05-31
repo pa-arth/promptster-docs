@@ -5,57 +5,64 @@ description: "Common questions from candidates about Promptster assessments."
 
 <AccordionGroup>
   <Accordion title="Do I need to install anything?">
-    Yes — the Promptster CLI. Run this one command:
+    Yes — the Promptster CLI, one command:
 
     ```bash
     curl -fsSL https://get.promptster.ai | sh
     ```
 
-    If you prefer not to use the installer script, you can install directly via npm:
-
-    ```bash
-    npm install -g @promptster/cli
-    ```
+    Or via npm: `npm install -g @promptster/cli`. See [Install](/candidates/cli/install).
   </Accordion>
 
-  <Accordion title="Does Promptster work with my AI coding tool?">
-    Promptster supports Claude Code and Cursor. After installing the CLI, run `promptster doctor` to verify your setup is configured correctly.
+  <Accordion title="Which AI coding tools are supported?">
+    **Claude Code** and **Cursor**. After `promptster start`, open your editor from the workspace directory and run `promptster doctor` to confirm everything is wired up.
+  </Accordion>
+
+  <Accordion title="Do I need a paid Claude plan? Will I be billed?">
+    No. During your assessment, Claude Code is routed through the Promptster proxy and **the hiring team covers the cost.** Your personal Claude account is never billed.
+  </Accordion>
+
+  <Accordion title="I'm logged into a Claude subscription — do I need to log out?">
+    No. Promptster's proxy out-ranks a logged-in Max/Pro subscription automatically, so you can stay signed in. The only thing that interferes is an `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` exported in your shell — `promptster doctor` flags it, and `eval "$(promptster env --clear)"` clears it. See [Claude Code auth & billing](/candidates/troubleshooting#claude-code-auth-and-billing).
   </Accordion>
 
   <Accordion title="What if I prefer not to use AI?">
-    That's fine. Promptster captures what happens in your session. If you don't use AI tools, there will simply be fewer events recorded — that's not penalized.
+    That's fine. Promptster captures what happens in your session; if you use AI less, fewer AI events are recorded — that isn't penalized. You're evaluated on judgment, not AI volume.
   </Accordion>
 
-  <Accordion title="Can I pause and resume my assessment?">
-    Yes. Your session stays open until you run `promptster done`. You can stop and restart your AI tool at any point without losing data.
+  <Accordion title="Why isn't my session being captured?">
+    Almost always because your editor wasn't opened from the workspace directory, so it never loaded the hooks. Quit and reopen Claude Code / Cursor from inside the workspace (or use `promptster start --restart`). Full walkthrough: [my events aren't being captured](/candidates/troubleshooting#my-events-arent-being-captured).
   </Accordion>
 
-  <Accordion title="What happens if I lose my internet connection?">
-    The CLI buffers events locally and retries automatically. You won't lose data during brief disconnections.
+  <Accordion title="Can I pause and resume?">
+    Yes. Your session stays open until you run `promptster done` (or the time limit ends). Stop and restart your editor or machine freely — just reopen the editor **from the workspace** so hooks reload. Run `promptster status` to see where you left off.
+  </Accordion>
+
+  <Accordion title="What happens when the time limit runs out?">
+    Timed assessments auto-submit server-side when the window closes, so you won't lose captured work. Check remaining time with `promptster brief`, and submit deliberately with `promptster done` before time's up if you can.
+  </Accordion>
+
+  <Accordion title="What if I lose my internet connection?">
+    Keep working — events are written to a local buffer as they happen, so a brief drop won't interrupt you. Confirm the server is receiving events with `promptster status`. If a disconnect hits during `promptster done`, the upload fails loudly (no false "submitted") — just re-run `done` once you're back online.
   </Accordion>
 
   <Accordion title="What does `promptster done` do exactly?">
-    It flushes any buffered events, posts a `session_end` event, and marks your candidate key as completed. The hiring team is notified automatically.
+    It bundles and uploads your workspace, flushes remaining events, marks your session complete, and gives you a link to your own session replay (copied to your clipboard). It then cleans up hooks and the proxy config. If you have empty decision notes, it asks you to finish them first (or pass `--auto`).
   </Accordion>
 
   <Accordion title="How long is my assessment key valid?">
-    Keys expire after the period set by the hiring team — typically 7 days from when they were sent to you. Run `promptster brief` to see how much time you have remaining.
+    Keys expire after a window set by the hiring team. Run `promptster brief` to see time remaining. If your key has expired, `promptster doctor` will say so — ask the hiring team for a fresh one.
   </Accordion>
 
   <Accordion title="Do I have to document my decisions?">
-    You're encouraged to, but not strictly required. Architecture decision rationale is one of the highest-signal parts of the assessment. Run `promptster explain` to document your thinking at any point during the session.
+    Not strictly, but it's one of the highest-signal parts of your submission. Use `/explain` in Claude Code or `promptster explain` to record *why* you made a choice. The CLI nudges you after a chunk of work if you haven't explained anything recently. See [Decisions](/candidates/cli/decisions).
   </Accordion>
 
   <Accordion title="Can I see my own session data?">
-    Not directly via the CLI. You can ask the hiring team to share your session details with you.
+    Yes — after submitting, `promptster done` gives you a private replay link. You can also request a full data export via the hiring team or privacy@promptster.ai. See [Privacy & Data](/candidates/privacy#your-rights-get-a-copy-of-your-data).
   </Accordion>
 
-  <Accordion title="My hooks didn't install — what do I do?">
-    Run `promptster doctor` to diagnose the issue. Common fixes:
-
-    - Restart Claude Code or Cursor after running `promptster start`
-    - Re-run `promptster start` from inside your project directory
-
-    If the issue persists, check that you ran `promptster start` in the correct task root directory.
+  <Accordion title="My setup is broken — how do I start over?">
+    Run `promptster reset` to wipe local session state and hooks (keeping the binary), then `promptster start PST-XXXX-XXXX` again. It works even when the session file is corrupt. See [Recovering from a broken setup](/candidates/troubleshooting#recovering-from-a-broken-setup).
   </Accordion>
 </AccordionGroup>
