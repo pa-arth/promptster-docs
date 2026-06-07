@@ -43,8 +43,40 @@ Authorization: Bearer psk_live_...
 </ParamField>
 
 <ParamField body="tokenBudgetUsd" type="number">
-  Maximum token spend allowed per candidate in USD. Must be positive and at most 1000.
+  Maximum token spend allowed per candidate in USD. Must be positive and at most 1000. Claude Code and Codex draw from this **single shared** per-candidate budget — allowing both tools does not double it.
 </ParamField>
+
+<ParamField body="allowedTools" type="string[]" default='["claude","codex","cursor"]'>
+  Which AI coding tools the candidate may use. One or more of:
+
+  - `claude` — Claude Code. Requires an org **Anthropic** key.
+  - `codex` — Codex CLI. Requires an org **OpenAI** key.
+  - `cursor` — Cursor. The candidate brings their **own** Cursor subscription, so no org key is needed.
+
+  If you **omit** this field, it is auto-derived from the provider keys your org has configured: `claude` is included if a usable Anthropic key resolves, `codex` if a usable OpenAI key resolves, and `cursor` is always included.
+
+  If you **set** it explicitly, your org must have a usable key for each selected tool's provider (`claude` → Anthropic, `codex` → OpenAI; `cursor` needs none), otherwise creation fails with `400 { "code": "byok_required" }`.
+</ParamField>
+
+<ParamField body="anthropicKeyMode" type="string" default="org_default">
+  Which Anthropic key the assessment uses when `claude` is allowed. `org_default` uses your org's default Anthropic key; `byok` uses the specific key named by `anthropicKeyId`.
+</ParamField>
+
+<ParamField body="anthropicKeyId" type="string">
+  ID (UUID) of the Anthropic key to use when `anthropicKeyMode` is `byok`. Discover key IDs via [List Provider Keys](/reviewers/api/keys/list). An invalid or unknown ID fails with `400 { "code": "byok_key_invalid" }`.
+</ParamField>
+
+<ParamField body="openaiKeyMode" type="string" default="org_default">
+  Which OpenAI key the assessment uses when `codex` is allowed. `org_default` uses your org's default OpenAI key; `byok` uses the specific key named by `openaiKeyId`.
+</ParamField>
+
+<ParamField body="openaiKeyId" type="string">
+  ID (UUID) of the OpenAI key to use when `openaiKeyMode` is `byok`. Discover key IDs via [List Provider Keys](/reviewers/api/keys/list). An invalid or unknown ID fails with `400 { "code": "byok_key_invalid" }`.
+</ParamField>
+
+<Note>
+  To select a specific provider key, first call [List Provider Keys](/reviewers/api/keys/list) to find its `id`, then pass it as `anthropicKeyId` or `openaiKeyId`.
+</Note>
 
 <ResponseField name="assessment" type="object">
   The created assessment object.
@@ -58,6 +90,7 @@ Authorization: Bearer psk_live_...
     <ResponseField name="issueId" type="string | null">Linked OSS issue ID.</ResponseField>
     <ResponseField name="timeLimitMinutes" type="integer | null">Time limit in minutes.</ResponseField>
     <ResponseField name="tokenBudgetUsd" type="number | null">Token budget in USD.</ResponseField>
+    <ResponseField name="allowedTools" type="string[]">The resolved set of tools the candidate may use (`claude`, `codex`, `cursor`).</ResponseField>
     <ResponseField name="expiresInDays" type="integer">Key expiry period in days.</ResponseField>
     <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
   </Expandable>
@@ -76,6 +109,7 @@ Authorization: Bearer psk_live_...
     "issueId": null,
     "timeLimitMinutes": 60,
     "tokenBudgetUsd": 25.0,
+    "allowedTools": ["claude", "codex", "cursor"],
     "expiresInDays": 7,
     "createdAt": "2026-04-07T10:30:00.000Z"
   }
@@ -94,7 +128,12 @@ curl -X POST https://api.promptster.ai/v1/assessments \
     "taskBrief": "Fix the stale closure bug in the useEffect hook.",
     "repoUrl": "https://github.com/acme/frontend-challenge",
     "timeLimitMinutes": 60,
-    "tokenBudgetUsd": 25.0
+    "tokenBudgetUsd": 25.0,
+    "allowedTools": ["claude", "codex", "cursor"],
+    "anthropicKeyMode": "byok",
+    "anthropicKeyId": "11111111-2222-3333-4444-555555555555",
+    "openaiKeyMode": "byok",
+    "openaiKeyId": "66666666-7777-8888-9999-000000000000"
   }'
 ```
 </RequestExample>
