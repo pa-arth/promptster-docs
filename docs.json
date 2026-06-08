@@ -106,6 +106,12 @@
             ]
           },
           {
+            "group": "Keys",
+            "pages": [
+              "reviewers/api/keys/list"
+            ]
+          },
+          {
             "group": "Sessions",
             "pages": [
               "reviewers/api/sessions/list",

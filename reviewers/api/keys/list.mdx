@@ -1,0 +1,69 @@
+---
+title: "List Provider Keys"
+api: "GET /v1/org/keys"
+description: "List your organization's configured AI provider keys."
+---
+
+Returns a masked list of the AI provider keys (Anthropic, OpenAI) your organization has configured. Use the `id` of a key to reference it when creating an assessment via `anthropicKeyId` or `openaiKeyId`.
+
+### Authentication
+
+Requires an org API key with the `read` scope, or a dashboard (Clerk) session.
+
+```
+Authorization: Bearer psk_live_...
+```
+
+<Warning>
+  This endpoint is **reference-only**. It lists existing provider keys in masked form — it never returns raw secrets. Adding, rotating, setting a default, and revoking provider keys are **dashboard-only** (**Settings → AI Provider**) and are intentionally not exposed over the public API: a long-lived API key must never be able to upload or rotate provider secrets.
+</Warning>
+
+<ResponseField name="keys" type="array">
+  List of provider key objects, never including raw secrets.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Key record ID (UUID). Pass as `anthropicKeyId` or `openaiKeyId` when creating an assessment.</ResponseField>
+    <ResponseField name="provider" type="string">`anthropic` or `openai`.</ResponseField>
+    <ResponseField name="name" type="string | null">Human-readable label for the key.</ResponseField>
+    <ResponseField name="prefix" type="string">Masked preview of the secret (e.g. `sk-ant-…XXXX`). The full secret is never returned.</ResponseField>
+    <ResponseField name="isDefault" type="boolean">Whether this is the org's default key for its provider.</ResponseField>
+    <ResponseField name="lastUsedAt" type="string | null">ISO 8601 timestamp the key was last used, if ever.</ResponseField>
+    <ResponseField name="lastValidatedAt" type="string | null">ISO 8601 timestamp the key was last validated against the provider, if ever.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp the key was added.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json 200
+{
+  "keys": [
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "provider": "anthropic",
+      "name": "Production Anthropic",
+      "prefix": "sk-ant-…9f2a",
+      "isDefault": true,
+      "lastUsedAt": "2026-06-06T18:20:00.000Z",
+      "lastValidatedAt": "2026-06-01T09:00:00.000Z",
+      "createdAt": "2026-05-20T14:05:00.000Z"
+    },
+    {
+      "id": "66666666-7777-8888-9999-000000000000",
+      "provider": "openai",
+      "name": "Production OpenAI",
+      "prefix": "sk-…a1b2",
+      "isDefault": true,
+      "lastUsedAt": null,
+      "lastValidatedAt": "2026-06-01T09:00:00.000Z",
+      "createdAt": "2026-05-22T11:30:00.000Z"
+    }
+  ]
+}
+```
+</ResponseExample>
+
+<RequestExample>
+```bash curl
+curl https://api.promptster.ai/v1/org/keys \
+  -H "Authorization: Bearer psk_live_abc123def456"
+```
+</RequestExample>
