@@ -75,11 +75,11 @@ Treat `insufficient_evidence` and `not_collectible` as *absence of data*, not as
 
 Two artifacts feed the rubric. You can read them directly to see *why* a dimension landed where it did.
 
-### `data_points_v1` — deterministic metrics
+### `data_points_v1` — deterministic signals
 
-Flat, countable metrics computed straight from the timeline — no model judgment involved. Among them:
+Flat, countable signals computed straight from the timeline — no model judgment involved. Among them:
 
-| Metric | What it measures |
+| Signal | What it measures |
 |--------|------------------|
 | `promptCount` | Prompts sent to the AI. |
 | `commandCount` / `commandFailRate` | Commands run, and the fraction that failed. |
@@ -105,4 +105,4 @@ This separation is what lets the rubric evaluate *the candidate's* judgment rath
 
 - **Read the evidence, not just the tier.** A `developing` `verification_loop` with `verifyIntensity` near zero tells a different story than one with high `verifyIntensity` but late timing.
 - **Respect confidence.** A `strong` rating at `low` confidence is a hint, not a verdict — corroborate it in the [timeline](/reviewers/sessions/overview).
-- **Compare within a cohort.** Ratings and metrics are most meaningful relative to other candidates on the same assessment. See [Cohort analysis](/reviewers/guides/cohort-analysis).
+- **Compare within a cohort.** Ratings and signals are most meaningful relative to other candidates on the same assessment. See [Cohort analysis](/reviewers/guides/cohort-analysis).
