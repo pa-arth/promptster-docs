@@ -59,7 +59,7 @@
         ]
       },
       {
-        "tab": "Hiring Teams",
+        "tab": "Reviewers",
         "groups": [
           {
             "group": "Get Started",
@@ -171,6 +171,39 @@
               "reviewers/resources/pagination",
               "reviewers/resources/rate-limits",
               "reviewers/resources/changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Teams",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "teams/introduction",
+              "teams/quickstart"
+            ]
+          },
+          {
+            "group": "Using the CLI",
+            "pages": [
+              "teams/cli/install",
+              "teams/cli/connect",
+              "teams/cli/commands"
+            ]
+          },
+          {
+            "group": "Privacy & Security",
+            "pages": [
+              "teams/privacy"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "teams/reference/configuration",
+              "teams/reference/troubleshooting"
             ]
           }
         ]

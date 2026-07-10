@@ -8,8 +8,12 @@ The Promptster CLI is a single binary that configures your editor hooks, routes 
 ## System requirements
 
 - **macOS** (Intel or Apple Silicon), **Linux** (x64 or arm64), or **Windows via WSL**
-- `git` and a working **Claude Code** or **Cursor** install
+- `git` and a working install of at least one supported AI tool — **Claude Code**, **Codex**, or **Cursor**
 - `curl` or `wget` for the install script (Node.js is **not** required for the script install)
+
+<Note>
+  You only need the tool(s) your assessment uses. If it runs on Codex, a missing `claude` binary won't block you — the CLI checks only the tool(s) you actually pick.
+</Note>
 
 ## Install
 
@@ -44,13 +48,13 @@ The Promptster CLI is a single binary that configures your editor hooks, routes 
 promptster version
 ```
 
-You should see a version string like `1.3.1`. If the command isn't found, add the bin directory to your `PATH`:
+You should see a version string like `1.5.0`. If the command isn't found, add the bin directory to your `PATH`:
 
 ```bash
 export PATH="$HOME/.promptster/bin:$PATH"
 ```
 
-Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent. To confirm everything is wired up correctly — git, the `claude` binary, the bin path, and (once you've started) your hooks — run:
+Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent. To confirm everything is wired up correctly — git, your AI tool's binary, the bin path, and (once you've started) your hooks — run:
 
 ```bash
 promptster doctor

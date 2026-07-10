@@ -22,7 +22,7 @@ You work the way you normally would:
     Install the CLI and run `promptster start PST-XXXX-XXXX`.
   </Step>
   <Step title="Build">
-    Open **Claude Code** or **Cursor** from your assessment workspace and solve the task.
+    Open **Claude Code**, **Codex**, or **Cursor** from your assessment workspace and solve the task.
   </Step>
   <Step title="Explain your decisions">
     When you make a meaningful choice, run `/explain` (in Claude Code) or `promptster explain` to record your reasoning in your own words.
@@ -35,7 +35,7 @@ You work the way you normally would:
 The CLI captures telemetry quietly while you work — you don't interact with it between those steps. The one habit worth building is **explaining your decisions**: a sentence on *why* you chose an approach is one of the highest-signal things a reviewer sees.
 
 <Note>
-  During your assessment, Claude Code's API usage is routed through Promptster — **the hiring team covers the cost, not you.** You don't need a paid Claude plan, and if you already have one, you don't need to log out of it. See [Claude Code auth & billing](/candidates/troubleshooting#claude-code-auth-and-billing).
+  Most assessments run in **managed** mode: your AI tool is routed through Promptster, **the hiring team covers the cost, not you**, and you don't need a paid plan or to log out of a personal one. Some assessments have you use your own subscription instead — `promptster start` sets up whichever the assessment uses. See [Signing in to the AI](/candidates/troubleshooting#signing-in-to-the-ai).
 </Note>
 
 ## Key concepts
@@ -43,7 +43,7 @@ The CLI captures telemetry quietly while you work — you don't interact with it
 | Term | What it means |
 |------|---------------|
 | **Assessment key** | A one-time code in `PST-XXXX-XXXX` format, emailed to you by the hiring team. You redeem it with `promptster start`. |
-| **Workspace** | The directory where you do the assessment. Hooks and the AI proxy are scoped to this folder — always open your editor *from here*. |
+| **Workspace** | The directory where you do the assessment. Your tool's hooks (and, in managed mode, the AI proxy) are scoped to this folder — always open your tool *from here*. |
 | **Session** | The capture window, from `promptster start` until `promptster done` (or until the time limit runs out). |
 | **Decision** | An architecture or tradeoff choice you document with `/explain`. Reviewers read these alongside your code. |
 | **Task brief** | What you're being asked to build — shown by `promptster brief` and saved to `TASK.md` in your workspace. |

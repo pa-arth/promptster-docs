@@ -1,0 +1,80 @@
+---
+title: "Privacy & security"
+description: "Exactly what the Teams CLI captures, what it never captures, and how source exclusion and tamper-evidence are enforced on your machine."
+---
+
+<Note>Your team sees *how* you work with AI — prompts, decisions, and metadata — never your source code. Source, diffs, file contents, command output, and AI responses are stripped on your machine before anything is written to disk, signed, or sent.</Note>
+
+This page is the complete, precise account of what leaves your machine. If you only read one page, read this one.
+
+## What is captured
+
+| Category | What is recorded | Example |
+|---|---|---|
+| Prompts | Text of the prompts you send to the AI | "Refactor this handler to stream the response" |
+| Tool-call metadata | File paths and line counts for edits; commands run, with inline code masked, plus exit codes | Edited `auth.ts` (`+12 / -3`); ran a command → exit 0 |
+| Model usage | Per-request token counts and the exact model, for cost visibility | 3,200 tokens, `claude-opus-4` |
+| Timestamps | When each event happened | 09:32 UTC |
+
+## What is NOT captured
+
+- **Source code, diffs, or file contents** — dropped on-device before anything is buffered
+- **Command output** (stdout / stderr) and **AI responses** — also dropped on-device
+- **Secrets and credentials** — redacted on-device (see [Redaction](#redaction))
+- **Keystrokes, your screen, your clipboard, camera, or microphone**
+- **Any file you don't open through the AI tool**
+- **Behavioral signals** — no typing cadence, no paste detection, no authorship scoring
+- **Your identity** — no name and no email. Events carry an anonymous per-device hash, not you
+
+## Source exclusion is enforced, not promised
+
+The "we never store your source code" guarantee doesn't depend on trusting the network or the backend. It's enforced in three places:
+
+1. **On your machine**, a default-deny field allowlist strips diffs, file contents, command output, tool arguments and results, and AI response text out of every event *before* it is buffered, signed, or sent. Inline code inside a kept command string (for example a `python -c '…'` body) is masked too.
+2. **The local buffer** at `~/.promptster-teams/buffer.jsonl` holds the exact, already-redacted, already-signed stream — you can read it to see precisely what would leave.
+3. **On the backend**, the same field projection is re-applied and the database physically rejects any row that carries source-bearing fields. Defense in depth: even a bug can't smuggle source through.
+
+## Redaction
+
+Before any event is buffered, secrets are scrubbed on your machine in layers:
+
+- A dedicated secret-scanning engine with hundreds of entropy-aware provider rules
+- Supplemental patterns for `KEY=value` pairs, connection-string passwords, cloud and API keys (AWS, GitHub, OpenAI/Anthropic, Slack, Bearer tokens, JWTs, PEM blocks), Promptster's own key formats, and PII (emails, phone numbers, private IPs)
+
+Redaction fails safe: if the primary engine can't initialize, the supplemental patterns still run.
+
+## The presence heartbeat
+
+So your team can tell "installed but idle" apart from "never installed," the CLI emits a small **presence** event when capture starts and every **5 minutes** after — even when you're idle. Its payload is closed and content-free: your device ID, CLI version, OS, architecture, and which directories are being watched. No prompt or code content is ever in a presence event.
+
+## The configuration census
+
+Once per capture start and then every **24 hours**, the CLI emits a single **config census** event describing your AI setup — but only **counts and names**, never file contents. It records the approximate token size of your `CLAUDE.md` files, the names of your skills and enabled plugins, your configured MCP server names, and a privacy-safe workspace key (derived from your git remote's owner/repo, or a hash when there's no remote — never a filesystem path).
+
+## Your identity stays anonymous
+
+Every event is tagged with an anonymous per-device hash derived from a stable machine identifier — never your name, email, or hostname. The mapping from a device to a person lives only in your team's dashboard, controlled by your admin. The events themselves can't identify you.
+
+## Tamper-evident signing
+
+Each event is signed on your machine with a per-device key and chained to the previous one, so the record is verifiably complete and unaltered:
+
+- On first capture, the CLI generates a device key pair and stores the private seed at `~/.promptster-teams/session.key`, readable only by you.
+- Every event is signed and linked to the signature of the event before it, forming an unbroken chain.
+- Your device's public key is sent with each request, and the backend pins the first key it sees for your device — so events can't be forged for you later.
+
+## Audit what leaves your machine
+
+You never have to take any of this on faith. The local buffer is the ground truth:
+
+```bash
+cat ~/.promptster-teams/buffer.jsonl
+```
+
+Every line is an event exactly as it was redacted and signed — the same bytes that go to your dashboard. If a field isn't there, it wasn't sent.
+
+## Threat model
+
+- **A curious or malicious backend** sees only the redacted metadata above — no source, ever.
+- **A network attacker** sees TLS-encrypted traffic, and any tampering is detectable through the signature chain.
+- **A fully compromised local machine** is out of scope — an attacker with root on your device can read your files directly, independent of this CLI.

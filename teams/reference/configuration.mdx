@@ -1,0 +1,53 @@
+---
+title: "Configuration"
+description: "Environment variables, config files, and how the Teams CLI resolves your key and dashboard host."
+---
+
+Most engineers never touch configuration — `promptster-teams login` sets everything up. This page is the full reference for scripted setups, non-default hosts, and debugging.
+
+## Environment variables
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `PROMPTSTER_TEAMS_TOKEN` | Your developer key (`PSE-…`) | Stored credentials file |
+| `PROMPTSTER_TEAMS_API_URL` | Dashboard host to stream to | `https://api.promptster.ai` |
+| `PROMPTSTER_TEAMS_WATCH_DIR` | Directory whose transcripts are captured | Current directory (`login` sets your home directory) |
+| `PROMPTSTER_TEAMS_INGEST_PATH` | Override the ingest path | `/v1/teams/ingest` |
+| `PROMPTSTER_DEBUG` | Set to `1` for a log line per captured event | Off |
+| `CLAUDE_CONFIG_DIR` | Where the CLI looks for Claude Code transcripts | `~/.claude` |
+| `CODEX_HOME` | Where the CLI looks for Codex transcripts | `~/.codex` |
+| `PROMPTSTER_TEAMS_VERSION` | Pin a version for the install script | Latest |
+
+## How your key and host are resolved
+
+For both your key and your dashboard host, the CLI takes the first value it finds, in this order:
+
+1. A command-line flag (`--key`, `--api-url`)
+2. The matching environment variable
+3. The stored credentials file
+4. The hosted default (for the host)
+
+So a flag always wins over the environment, which wins over the saved file.
+
+## Config files
+
+Everything lives under `~/.promptster-teams/`:
+
+| Path | What it is |
+|---|---|
+| `credentials` | Your developer key and any non-default host, written by `login` (readable only by you) |
+| `session.key` | Your device's private signing seed (readable only by you) |
+| `buffer.jsonl` | The local audit log — the exact redacted, signed events that are sent |
+| `supervisor.json` | Tracks the background capture process |
+| `daemon.log` | Logs from background capture |
+| `bin/promptster-teams` | The binary, when installed via the script |
+
+Background capture also keeps small watcher state files (process IDs and read offsets) in this directory so it processes each transcript exactly once and can be stopped cleanly.
+
+<Note>
+  Never commit `~/.promptster-teams/` or share `session.key` — that seed is what proves events came from your device.
+</Note>
+
+## Coexisting with the hiring CLI
+
+If you also have Promptster's hiring CLI installed, the two don't interfere. The Teams CLI uses the `promptster-teams` binary and the `~/.promptster-teams` directory; the hiring CLI uses `promptster` and `~/.promptster`. They can run side by side.

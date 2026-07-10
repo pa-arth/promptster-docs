@@ -1,0 +1,52 @@
+---
+title: "Introduction"
+description: "What Promptster for Teams is, who runs it, and the promise that your source code never leaves your machine."
+---
+
+Promptster for Teams is a lightweight CLI that captures how your engineers actually work with AI coding tools — the prompts they write, the decisions they make, and the metadata around them — so your team gets an honest picture of AI adoption and impact. It runs on each engineer's own machine, reads the transcripts your AI tools already write to disk, and streams a **redacted** record to your team's Promptster dashboard.
+
+The load-bearing promise: **Promptster for Teams never stores your source code.** Source, diffs, file contents, command output, and AI responses are stripped on your machine — before anything is written to disk, signed, or sent. This isn't a policy you have to trust; it's how the tool is built.
+
+<Note>
+  This is a different product from Promptster's hiring assessments. The Teams CLI has no assessment, scoring-against-you, or anti-cheat logic. It measures adoption and impact for a team you're already on — not candidates. It also uses its own binary (`promptster-teams`) and its own local directory (`~/.promptster-teams`), so it coexists cleanly with the hiring CLI if you have both.
+</Note>
+
+## Who runs what
+
+<Steps>
+  <Step title="An admin mints your key">
+    A manager or admin creates a per-developer key in your team's Promptster dashboard and sends it to you. Keys look like `PSE-XXXX-XXXX`.
+  </Step>
+  <Step title="You connect once">
+    You install the CLI and run `promptster-teams login`. That saves your key and starts capture in the background. You don't run anything again day to day.
+  </Step>
+  <Step title="Capture runs quietly">
+    As you use **Claude Code** or **Codex**, the CLI tails their transcripts, redacts secrets and strips source locally, and ships the redacted metadata to the dashboard.
+  </Step>
+</Steps>
+
+## What it captures
+
+Promptster for Teams records the *shape* of your AI-assisted work, never its content:
+
+- The prompts you send to the AI
+- Tool-call metadata — file paths and line counts for edits, commands run (with any inline code masked) and their exit codes
+- Per-request token usage and the exact model, so your team can see cost
+- Timestamps
+
+It does **not** capture your source code, diffs, file contents, command output, AI responses, keystrokes, your screen, your clipboard, secrets, or your identity. Events carry an anonymous per-device hash, not your name or email. For the complete list and how it's enforced, see [Privacy & security](/teams/privacy).
+
+## Supported tools
+
+The CLI captures **Claude Code** and **Codex** by reading the transcript files they write to disk. Both must be installed and have run at least once so their transcript directories exist. Cursor is not supported.
+
+## Ready to connect?
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/teams/quickstart">
+    Install, connect your key, and confirm capture is running in a few minutes.
+  </Card>
+  <Card title="Privacy & security" icon="shield" href="/teams/privacy">
+    Exactly what's captured, what isn't, and how source exclusion is enforced.
+  </Card>
+</CardGroup>

@@ -1,0 +1,57 @@
+---
+title: "Quickstart"
+description: "Install the Teams CLI, connect your developer key, and confirm capture is running."
+---
+
+Get from a fresh install to live capture in a few minutes. You'll need a `PSE-XXXX-XXXX` developer key from your team admin — if you don't have one, ask them to mint you a key in the Promptster dashboard.
+
+<Steps>
+  <Step title="Install the CLI">
+    ```bash
+    npm install -g @promptster/teams-cli
+    ```
+
+    This installs the `promptster-teams` binary. Prefer a script or a raw binary? See [Install](/teams/cli/install) for every option, including the curl installer and platform notes.
+  </Step>
+
+  <Step title="Connect your key">
+    ```bash
+    promptster-teams login
+    ```
+
+    Paste your `PSE-XXXX-XXXX` key when prompted. `login` validates the key, saves it to `~/.promptster-teams/`, and **starts capture in the background** — so this is the only command you normally need to run.
+
+    Scripting it? Pass the key directly:
+
+    ```bash
+    promptster-teams login --key PSE-XXXX-XXXX
+    ```
+  </Step>
+
+  <Step title="Use Claude Code or Codex normally">
+    Just work. As you prompt **Claude Code** or **Codex**, the CLI tails their transcripts, redacts secrets and strips source on your machine, and streams the redacted metadata to your team's dashboard. There's nothing to run per session.
+  </Step>
+
+  <Step title="Confirm it's working">
+    ```bash
+    promptster-teams status
+    ```
+
+    You'll see your key (masked), the dashboard host, the directory being watched, whether the background capture is running, and a live count of buffered events. If anything looks off, run `promptster-teams doctor` for a checklist with fixes.
+  </Step>
+</Steps>
+
+<Note>
+  Capture runs quietly and prints nothing while you work. To confirm what would leave your machine, inspect the local audit log at `~/.promptster-teams/buffer.jsonl` — it holds the exact redacted, signed event stream. See [Privacy & security](/teams/privacy#audit-what-leaves-your-machine).
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Connect" icon="key" href="/teams/cli/connect">
+    How keys work, what `login` does, and the environment-variable path.
+  </Card>
+  <Card title="Commands" icon="terminal" href="/teams/cli/commands">
+    Every command — `login`, `status`, `stop`, `doctor`, and more.
+  </Card>
+</CardGroup>
