@@ -1,0 +1,108 @@
+---
+title: "Commands"
+description: "Every Promptster for Teams CLI command — reference for engineers."
+---
+
+Run `promptster-teams <command> [flags]`. In normal use you only run `login` once and occasionally `status` or `doctor` — the rest manage background capture or help you recover.
+
+## Capture
+
+<AccordionGroup>
+  <Accordion title="promptster-teams login — connect and start capturing">
+    Saves your developer key, validates it, pings your dashboard host, and starts background capture scoped to your home directory. This is the only command most engineers run.
+
+    ```bash
+    promptster-teams login
+    promptster-teams login --key PSE-XXXX-XXXX   # non-interactive
+    ```
+
+    | Flag | Description |
+    |------|-------------|
+    | `--key PSE-…` | Provide the key instead of being prompted. |
+    | `--api-url <url>` | Point at a non-default dashboard host. |
+
+    See [Connect](/teams/cli/connect) for the full flow.
+  </Accordion>
+
+  <Accordion title="promptster-teams start — start background capture">
+    Spawns a detached capture process and returns your shell. Idempotent — running it when capture is already active does nothing. Logs go to `~/.promptster-teams/daemon.log`.
+
+    ```bash
+    promptster-teams start
+    ```
+
+    `login` already calls this for you; use `start` directly if you connected via the `PROMPTSTER_TEAMS_TOKEN` environment variable.
+  </Accordion>
+
+  <Accordion title="promptster-teams stop — stop background capture">
+    Stops the background capture process.
+
+    ```bash
+    promptster-teams stop
+    ```
+
+    It signals the tracked process IDs recorded under `~/.promptster-teams/`. If capture was started without a tracked PID, `stop` tells you to find it with `pgrep -fl promptster-teams`.
+  </Accordion>
+
+  <Accordion title="promptster-teams watch — capture in the foreground">
+    Runs capture in the foreground, holding your terminal until you press Ctrl-C. Useful for debugging or one-off runs.
+
+    ```bash
+    promptster-teams watch
+    promptster-teams watch --key PSE-XXXX-XXXX   # supply the key inline
+    ```
+
+    | Flag | Description |
+    |------|-------------|
+    | `--key PSE-…` | Use this developer key instead of a stored or environment one. |
+    | `--api-url <url>` | Point at a non-default dashboard host. |
+
+    `start` accepts the same two flags. Combine either with `PROMPTSTER_DEBUG=1` to print a line per captured event.
+  </Accordion>
+</AccordionGroup>
+
+## Status & diagnostics
+
+<AccordionGroup>
+  <Accordion title="promptster-teams status — is capture running?">
+    Shows your key (masked), the dashboard host, the watched directory, whether the background capture is running and its process ID, your anonymous device ID, and the number of buffered events.
+
+    ```bash
+    promptster-teams status
+    ```
+
+    By default it's a live dashboard that refreshes about once a second. For a single static snapshot — in a script or a non-interactive shell — use any of:
+
+    ```bash
+    promptster-teams status --once
+    promptster-teams status --plain
+    promptster-teams status -1
+    ```
+  </Accordion>
+
+  <Accordion title="promptster-teams doctor — diagnose your setup">
+    Runs a health check and prints each result with a suggested fix. It confirms:
+
+    - a developer key is present and is a valid `PSE-` key (and where it came from)
+    - your dashboard host is reachable
+    - your Claude Code transcript directory exists
+
+    ```bash
+    promptster-teams doctor
+    ```
+
+    Run this first whenever capture seems off. See [Troubleshooting](/teams/reference/troubleshooting).
+  </Accordion>
+
+  <Accordion title="promptster-teams version">
+    Prints the installed CLI version.
+
+    ```bash
+    promptster-teams version
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Internal subcommands
+
+The CLI spawns `claude-watch` and `codex-watch` itself to tail Claude Code and Codex transcripts. You don't run these directly — background capture manages them. They're mentioned here only so you recognize them if you see them in a process list or in `daemon.log`.

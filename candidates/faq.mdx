@@ -15,15 +15,15 @@ description: "Common questions from candidates about Promptster assessments."
   </Accordion>
 
   <Accordion title="Which AI coding tools are supported?">
-    **Claude Code** and **Cursor**. After `promptster start`, open your editor from the workspace directory and run `promptster doctor` to confirm everything is wired up.
+    **Claude Code**, **Codex**, and **Cursor**. `promptster start` asks which one you'll use (or pass `--tools`). Open that tool from the workspace directory and run `promptster doctor` to confirm everything is wired up.
   </Accordion>
 
-  <Accordion title="Do I need a paid Claude plan? Will I be billed?">
-    No. During your assessment, Claude Code is routed through the Promptster proxy and **the hiring team covers the cost.** Your personal Claude account is never billed.
+  <Accordion title="Do I need a paid plan? Will I be billed?">
+    In the default managed mode, no — your tool is routed through the Promptster proxy and your personal account is never billed. Some assessments instead have you use your own Claude Code, Codex, or Cursor sign-in; `promptster start` sets up whichever mode the assessment uses. See [Signing in to the AI](/candidates/troubleshooting#signing-in-to-the-ai).
   </Accordion>
 
   <Accordion title="I'm logged into a Claude subscription — do I need to log out?">
-    No. Promptster's proxy out-ranks a logged-in Max/Pro subscription automatically, so you can stay signed in. The only thing that interferes is an `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` exported in your shell — `promptster doctor` flags it, and `eval "$(promptster env --clear)"` clears it. See [Claude Code auth & billing](/candidates/troubleshooting#claude-code-auth-and-billing).
+    No. In managed mode, Promptster's proxy out-ranks a logged-in Max/Pro subscription automatically, so you can stay signed in. The only thing that interferes is an `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` exported in your shell — `promptster doctor` flags it, and `eval "$(promptster env --clear)"` clears it. See [Signing in to the AI](/candidates/troubleshooting#signing-in-to-the-ai).
   </Accordion>
 
   <Accordion title="What if I prefer not to use AI?">
@@ -31,7 +31,7 @@ description: "Common questions from candidates about Promptster assessments."
   </Accordion>
 
   <Accordion title="Why isn't my session being captured?">
-    Almost always because your editor wasn't opened from the workspace directory, so it never loaded the hooks. Quit and reopen Claude Code / Cursor from inside the workspace (or use `promptster start --restart`). Full walkthrough: [my events aren't being captured](/candidates/troubleshooting#my-events-arent-being-captured).
+    Almost always because your tool wasn't opened from the workspace directory, so capture never attached. Quit and reopen Claude Code, Codex, or Cursor from inside the workspace (or use `promptster start --restart`). Full walkthrough: [my events aren't being captured](/candidates/troubleshooting#my-events-arent-being-captured).
   </Accordion>
 
   <Accordion title="Can I pause and resume?">
@@ -47,7 +47,7 @@ description: "Common questions from candidates about Promptster assessments."
   </Accordion>
 
   <Accordion title="What does `promptster done` do exactly?">
-    It bundles and uploads your workspace, flushes remaining events, marks your session complete, and gives you a link to your own session replay (copied to your clipboard). It then cleans up hooks and the proxy config. If you have empty decision notes, it asks you to finish them first (or pass `--auto`).
+    It bundles and uploads your workspace, flushes remaining events, marks your session complete, and gives you a link to your own session replay (copied to your clipboard). It then cleans up your tool's hooks and, in managed mode, the proxy config. If you have empty decision notes, it asks you to finish them first (or pass `--auto`).
   </Accordion>
 
   <Accordion title="How long is my assessment key valid?">

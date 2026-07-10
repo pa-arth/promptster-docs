@@ -1,0 +1,70 @@
+---
+title: "Connect"
+description: "How your developer key works, what login does, and the environment-variable path for scripted setup."
+---
+
+Your developer key is the whole identity. There's no OAuth flow, no browser login, and no org code to enter — a single `PSE-XXXX-XXXX` key connects you to your team. An admin mints it in the Promptster dashboard and sends it to you.
+
+## Connect with `login`
+
+The simplest path is one command:
+
+```bash
+promptster-teams login
+```
+
+It prompts for your key, or you can pass it directly for scripted setup:
+
+```bash
+promptster-teams login --key PSE-XXXX-XXXX
+```
+
+`login`:
+
+1. Validates the key format.
+2. Best-effort pings your dashboard host to confirm it's reachable.
+3. Saves your key to `~/.promptster-teams/credentials` (readable only by you).
+4. **Starts capture in the background**, scoped to your home directory — so all your repos are covered.
+
+That's it. You don't run `login` again unless you get a new key.
+
+<Note>
+  Some older onboarding snippets set an environment variable and run `watch` directly and don't mention `login`. `login` **is** the recommended path — it also starts background capture for you. The environment-variable path below still works if you prefer it.
+</Note>
+
+## The environment-variable path
+
+If you'd rather not store the key on disk — for example in an ephemeral or CI-like environment — set it in your environment and start capture yourself:
+
+```bash
+export PROMPTSTER_TEAMS_TOKEN=PSE-XXXX-XXXX
+promptster-teams watch      # foreground, holds the terminal
+# or
+promptster-teams start      # background, returns your shell
+```
+
+Point the CLI at a non-default dashboard host with `--api-url` or `PROMPTSTER_TEAMS_API_URL`. See [Configuration](/teams/reference/configuration) for the full precedence order and every variable.
+
+## Choosing what gets watched
+
+By default, `login` watches your entire home directory, so every repo you work in is captured. If you start capture manually from inside a specific project, only that directory (and its git worktrees) is watched — transcripts whose working directory sits outside the watched path are skipped. To set the scope explicitly:
+
+```bash
+export PROMPTSTER_TEAMS_WATCH_DIR="$HOME/code"
+```
+
+<Warning>
+  If capture seems to record nothing, the most common cause is scope: the AI tool's transcript reports a working directory that isn't inside the watched directory. Run `promptster-teams status` to see the watched directory, and re-run `login` (which defaults the scope to your home directory) if it's too narrow.
+</Warning>
+
+## Verify the connection
+
+```bash
+promptster-teams doctor
+```
+
+`doctor` confirms your key is present and valid, your dashboard host is reachable, and your Claude Code transcript directory exists. See [Commands](/teams/cli/commands) and [Troubleshooting](/teams/reference/troubleshooting).
+
+## Getting a key (for admins)
+
+Managers and admins mint and revoke per-developer keys in the Promptster dashboard, where each active developer uses one seat. Hand the `PSE-XXXX-XXXX` key to the engineer; they run `login` once. Revoking a key stops that developer's capture from being accepted.

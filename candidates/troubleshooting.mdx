@@ -9,7 +9,7 @@ When something seems off, start here:
 promptster doctor
 ```
 
-`doctor` checks your binary, `PATH`, session, hooks, proxy config, and connectivity, and prints a suggested fix for anything that fails. Most issues below are things `doctor` will point you straight at.
+`doctor` checks your binary, `PATH`, session, your AI tool's hooks, proxy config (in managed mode), and connectivity, and prints a suggested fix for anything that fails. It only checks the tool(s) your session actually uses. Most issues below are things `doctor` will point you straight at.
 
 ## My events aren't being captured
 
@@ -22,21 +22,21 @@ This is almost always because your editor isn't running inside the captured work
     ```
     The event count should climb as you send prompts and edit files. If it's moving, capture is working.
   </Step>
-  <Step title="Open your editor from the workspace, in a new window">
-    Hooks live in `<workspace>/.claude/settings.local.json` (and `.cursor/hooks.json`). An editor window opened *before* `promptster start`, or started from a different directory, never loaded them.
+  <Step title="Open your tool from the workspace, in a new window">
+    Capture is tied to the workspace folder. Claude Code hooks live in `<workspace>/.claude/settings.local.json` and Cursor's in `<workspace>/.cursor/hooks.json`; Codex is captured by watching its transcript for work done in the workspace. A window opened *before* `promptster start`, or started from a different directory, isn't captured.
 
     ```bash
     cd <your-workspace>
-    claude
+    claude   # or codex, or cursor
     ```
 
-    Fully quit and reopen Claude Code / Cursor if it was already running — or re-run `promptster start --restart`, which offers to restart it for you.
+    Fully quit and reopen your tool if it was already running — or re-run `promptster start --restart`, which offers to restart it for you.
   </Step>
   <Step title="Re-run doctor">
     ```bash
     promptster doctor
     ```
-    Check that the **Claude settings file** and **hook points** rows pass. If they don't, re-run `promptster start` from inside the workspace.
+    Check that the rows for your tool's hooks (or transcript capture) pass. If they don't, re-run `promptster start` from inside the workspace.
   </Step>
 </Steps>
 
@@ -44,26 +44,32 @@ This is almost always because your editor isn't running inside the captured work
   Terminal commands are only captured when run **inside the workspace directory**. Commands you run elsewhere are intentionally ignored.
 </Note>
 
-## Claude Code auth and billing
+## Signing in to the AI
 
-During your assessment, Claude Code is routed through the Promptster proxy and **the hiring team pays for the usage** — you don't need a paid Claude plan.
+Assessments run in one of two modes, and `start` sets up the right one for you.
 
-**You do *not* need to `/logout` of your own Claude subscription.** Promptster wires the proxy through Claude Code's `apiKeyHelper`, which out-ranks a logged-in Max/Pro subscription in Claude Code's credential order. The proxy wins automatically. (If an older guide told you to log out, that advice is obsolete as of CLI 1.3.1.)
+**Managed proxy (default).** Your AI tool is routed through the Promptster proxy, so **you don't sign in to the model yourself** and you don't need a paid plan of your own.
 
-The **one** thing that *does* break the proxy is an Anthropic key exported in your shell — it out-ranks the helper:
+- With Claude Code you do *not* need to `/logout` of a personal Max/Pro subscription — the proxy is wired through Claude Code's `apiKeyHelper`, which out-ranks a logged-in subscription automatically.
+- The **one** thing that breaks the proxy is an Anthropic key exported in your shell — it out-ranks the helper:
 
-```bash
-# doctor will flag this if present:
-echo $ANTHROPIC_API_KEY $ANTHROPIC_AUTH_TOKEN
-```
+  ```bash
+  # doctor will flag this if present:
+  echo $ANTHROPIC_API_KEY $ANTHROPIC_AUTH_TOKEN
+  ```
 
-If either is set (often left over from your own projects or an older Promptster session), clear it for the session:
+  If either is set (often left over from your own projects or an older Promptster session), clear it for the session, then reopen your tool:
 
-```bash
-eval "$(promptster env --clear)"
-```
+  ```bash
+  eval "$(promptster env --clear)"
+  ```
 
-Then reopen Claude Code. After setup, `promptster start` runs a tiny proxy smoke test — if that succeeded, your auth is good.
+  After setup, `promptster start` runs a tiny proxy smoke test — if that succeeded, your auth is good.
+
+**Your own subscription.** Some assessments have you use your own Claude Code, Codex, or Cursor sign-in instead of the proxy. `doctor` tells you which mode you're in. In this mode:
+
+- Sign in to your tool exactly as you normally would — there's no proxy to smoke-test.
+- Promptster captures through your tool's transcript, so an exported `ANTHROPIC_*` key won't break capture. Everything else — hooks, `explain`, `done` — works the same.
 
 ## I got a 401 / "authentication" error on my first prompt
 

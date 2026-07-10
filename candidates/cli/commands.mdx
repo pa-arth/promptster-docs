@@ -26,26 +26,29 @@ The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`
     <Steps>
       <Step title="Redeems your key & accepts terms">Validates the key, then walks you through the data-capture notice and the optional authorship-timing question.</Step>
       <Step title="Prepares your workspace">Uses your current folder, a path you choose, or a fresh `~/promptster-test`. If the assessment includes a starter repo, it's cloned at the correct commit.</Step>
+      <Step title="Chooses your AI tool">Prompts you to pick Claude Code, Codex, or Cursor (or configures all of them). Skip the prompt with `--tools`. The CLI only checks for the tool(s) you pick.</Step>
       <Step title="Writes TASK.md">Saves the task brief to `TASK.md` and adds `.promptster/` to `.gitignore`.</Step>
-      <Step title="Configures hooks & proxy">Writes Claude Code / Cursor hooks into your workspace and routes the AI through the Promptster proxy (the hiring team covers the cost).</Step>
-      <Step title="Smoke-tests the proxy">Fires one tiny request so any auth/network problem surfaces now, not on your first prompt.</Step>
+      <Step title="Configures hooks & AI access">Writes hooks for your chosen tool into your workspace. In the default managed mode it also routes the AI through the Promptster proxy, so you don't sign in to the model yourself. If the assessment uses your own subscription, you sign in to your tool normally and capture happens through its transcript — see [how the AI is set up](#how-the-ai-is-set-up).</Step>
+      <Step title="Smoke-tests capture">Fires one tiny request (managed mode) so any auth or network problem surfaces now, not on your first prompt.</Step>
     </Steps>
 
     **Flags:**
 
     | Flag | Description |
     |------|-------------|
+    | `--tools <list>` | Skip the tool prompt. One or more of `claude`, `codex`, `cursor`, or `all`. |
+    | `--byo-subscription` | Use your own AI subscription instead of the managed proxy. Usually set automatically by the assessment — see [how the AI is set up](#how-the-ai-is-set-up). |
     | `--accept-tos` | Accept the terms non-interactively (scripted/CI use). |
     | `--workspace PATH` | Use `PATH` as the workspace instead of prompting. |
     | `--restart` | Offer to restart a running editor so it reloads the new hooks. |
     | `--verbose` | Print each setup sub-step (paths, proxy URL, hook events) for debugging. |
 
     ```bash
-    promptster start PST-ABCD-1234 --accept-tos --workspace ~/my-assessment
+    promptster start PST-ABCD-1234 --tools codex --workspace ~/my-assessment
     ```
 
     <Warning>
-      After `start`, open Claude Code or Cursor **from the workspace directory in a new window**. Hooks are scoped to that folder — an editor that was already open won't capture your session. Use `--restart` (or restart your editor yourself) if it was already running.
+      After `start`, open your AI tool (Claude Code, Codex, or Cursor) **from the workspace directory in a new window**. Hooks are scoped to that folder — a tool that was already open won't capture your session. Use `--restart` (or restart your tool yourself) if it was already running.
     </Warning>
   </Accordion>
 
@@ -69,14 +72,20 @@ The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`
   </Accordion>
 
   <Accordion title="promptster brief — see your task (alias: task)">
-    Shows the task brief, time limit, time remaining, and workspace path.
+    Opens the structured task brief — scenario, codebase orientation, phases, evaluation dimensions, and ground rules — with a live countdown, in a **new terminal window** so it stays visible beside your editor.
 
     ```bash
-    promptster brief
+    promptster brief          # opens the live brief in a new window
+    promptster brief --here   # print it inline in the current terminal
     promptster brief --json   # machine-readable
     ```
 
-    The same brief lives in `TASK.md` in your workspace. The assessment title is deliberately omitted so it can't leak hints about the solution.
+    | Flag | Description |
+    |------|-------------|
+    | `--here` | Render the brief inline instead of spawning a new window. |
+    | `--json` | Emit the brief as JSON. |
+
+    The same brief also lives in `TASK.md` in your workspace. The assessment title and the nature of the planted defect are deliberately omitted so they can't leak hints about the solution.
   </Accordion>
 
   <Accordion title="promptster done — submit (flag: --auto)">
@@ -87,7 +96,7 @@ The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`
     promptster done --auto   # skip the pending-decision check
     ```
 
-    On success you get a results link (copied to your clipboard), and your hooks, shell hook, and proxy config are cleaned up automatically. The workspace is then safe to delete.
+    On success you get a results link (copied to your clipboard), and your hooks, shell hook, and (in managed mode) proxy config are cleaned up automatically. The workspace is then safe to delete.
 
     <Warning>
       If you started decision notes that are still empty, `done` refuses to proceed until you finish them with `promptster explain` (or pass `--auto`). If the upload fails, `done` exits with an error rather than falsely reporting success — re-run it once your connection is back.
@@ -112,11 +121,11 @@ The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`
   <Accordion title="promptster doctor — diagnose your setup">
     Runs a full health check and prints each result with `✓` (pass) or `✗` (fail) plus a suggested fix. It checks:
 
-    - `git` and the `claude` binary are on your `PATH`
+    - `git` and the binary for each AI tool your session uses (`claude`, `codex`, or `cursor`) are on your `PATH`
     - the `promptster` binary is installed and `~/.promptster/bin` is on your `PATH`
-    - no conflicting `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` is exported in your shell (these break the proxy)
-    - your session is active and not expired, and the `apiKeyHelper` can resolve a token
-    - Claude Code hooks and the proxy config are present in your workspace
+    - no conflicting `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` is exported in your shell (these break the managed proxy)
+    - your session is active and not expired, and (in managed mode) a token can be resolved
+    - your tool's hooks and, in managed mode, the proxy config are present in your workspace
     - the shell hook is installed and sourced
     - the API is reachable and your session is fetchable
 
@@ -181,12 +190,30 @@ The commands you'll use in a normal assessment are **`start`**, **`brief`**, **`
   </Accordion>
 </AccordionGroup>
 
+## How the AI is set up
+
+Every assessment runs in one of two modes. You don't choose it — the assessment does, and `start` configures the right one automatically.
+
+| Mode | How the AI is authorized | What you do |
+|------|--------------------------|-------------|
+| **Managed proxy** (default) | The CLI routes your tool through the Promptster proxy. You don't sign in to the model yourself. | Nothing extra — just work. |
+| **Your own subscription** | The CLI captures through your tool's transcript instead of the proxy. | Sign in to Claude Code, Codex, or Cursor as you normally would. |
+
+If an assessment uses your own subscription, `start` sets `--byo-subscription` for you (you rarely pass it by hand). In this mode there's no proxy to smoke-test or clean up, and `doctor` won't check for proxy config. Everything else — hooks, `explain`, `done` — works the same.
+
+## Advanced & internal commands
+
+You'll almost never run these directly, but they exist:
+
+- **`promptster redeem <key>`** — validates a key and accepts the terms **without** cloning a repo or installing hooks. `start` does this for you; use `redeem` only if the hiring team asks you to.
+- **`promptster auth-token`** — prints a session auth token for tooling. Internal; not needed in a normal assessment.
+
 ## Interactive menu
 
 Running `promptster` with no arguments opens a numbered menu. Type a number, or paste your `PST-XXXX-XXXX` key directly — the CLI detects the prefix and routes to `start`.
 
 ```
-  Promptster  v1.3.1
+  Promptster  v1.5.0
 
    1  Start assessment       Redeem a key and begin
    2  View task brief        Show the current task + time remaining

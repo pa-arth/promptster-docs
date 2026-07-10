@@ -44,23 +44,23 @@ This is the happy path from email to submission. If anything misbehaves along th
     You'll then be asked one **optional** question — whether to allow *cadence-based authorship checks* (timing between your prompts and commands, to help reviewers distinguish typed work from pasted work). You can answer `no` and still take the assessment normally. See [Privacy & Data](/candidates/privacy).
   </Step>
 
-  <Step title="Choose your workspace">
-    `start` asks where to work. You can use the current folder, enter a custom path, or let it create a fresh `~/promptster-test` directory. If the assessment ships a starter repo, the CLI clones it at the correct commit for you.
+  <Step title="Choose your AI tool and workspace">
+    `start` asks which AI tool you'll use — **Claude Code, Codex, or Cursor** — and where to work. You can use the current folder, enter a custom path, or let it create a fresh `~/promptster-test` directory. If the assessment ships a starter repo, the CLI clones it at the correct commit for you.
 
-    It then writes your task to `TASK.md`, configures Claude Code / Cursor hooks, and routes the AI through the Promptster proxy. When setup finishes you'll see your task brief and the workspace path.
+    It then writes your task to `TASK.md` and configures your tool's hooks. In the default managed mode it also routes the AI through the Promptster proxy so you don't sign in to the model yourself; if the assessment uses your own subscription, you'll sign in to your tool as usual. When setup finishes you'll see your task brief and the workspace path.
   </Step>
 
-  <Step title="Open your editor from the workspace — then build">
+  <Step title="Open your tool from the workspace — then build">
     <Warning>
-      Open Claude Code (or Cursor) **from inside the workspace directory**, in a new editor window. Hooks and the AI proxy are scoped to that folder — an editor window that was already open, or one started from a different directory, will **not** be captured.
+      Open your AI tool (Claude Code, Codex, or Cursor) **from inside the workspace directory**, in a new window. Hooks and the AI proxy are scoped to that folder — a window that was already open, or one started from a different directory, will **not** be captured.
     </Warning>
 
     ```bash
     cd ~/promptster-test   # the workspace path start printed
-    claude                 # opens Claude Code here
+    claude                 # opens Claude Code here (use codex or cursor for those tools)
     ```
 
-    Now work normally. You don't need a paid Claude plan and you don't need to log out of one — Promptster covers the AI cost for the assessment. Check your task or time remaining anytime:
+    Now work normally. In the default managed mode you don't need to sign in to the model at all — Promptster routes it through the proxy for the assessment. If the assessment uses your own subscription, just sign in to your tool as you normally would. Check your task or time remaining anytime:
 
     ```bash
     promptster brief

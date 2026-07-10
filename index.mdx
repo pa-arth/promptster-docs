@@ -1,33 +1,52 @@
 ---
 title: "Welcome to Promptster"
-description: "Objective AI coding assessments — capture how candidates work with AI tools, not just what they ship."
+description: "Measure how engineers work with AI coding tools — for hiring, and for your own team."
 ---
 
-Promptster runs alongside Claude Code and Cursor during a coding assessment, capturing a record of the session: prompts, file changes, commands, test runs, and the candidate's own decision rationale. Hiring teams get an evidence trail to evaluate engineering judgment — not just final output.
+Promptster captures a record of how someone works with AI coding tools — prompts, file changes, commands, test runs, and their own decision rationale — so you can evaluate engineering judgment, not just final output. It works with **Claude Code, Codex, and Cursor**.
+
+## Which product are you here for?
+
+Promptster comes in two products. Pick the one that matches what you're doing.
 
 <CardGroup cols={2}>
-  <Card title="Candidate Quickstart" icon="rocket" href="/candidates/quickstart">
+  <Card title="Promptster for Hiring" icon="user-magnifying-glass" href="/candidates/introduction">
+    Assess candidates on a coding task. Candidates run the `promptster` CLI during a take-home; hiring teams review the session. **You're a candidate or a reviewer.**
+  </Card>
+  <Card title="Promptster for Teams" icon="users" href="/teams/introduction">
+    Understand how your own engineers use AI, with source code never leaving their machines. Engineers run the `promptster-teams` CLI. **You're on an internal engineering team.**
+  </Card>
+</CardGroup>
+
+<Note>
+  The two products use **different CLIs** — `promptster` for hiring, `promptster-teams` for teams — and coexist cleanly if you have both. If you were sent a `PST-XXXX-XXXX` key you're a **candidate** (Hiring); a `PSE-XXXX-XXXX` key means you're an **engineer** (Teams).
+</Note>
+
+## Jump in
+
+<CardGroup cols={2}>
+  <Card title="Candidate quickstart" icon="rocket" href="/candidates/quickstart">
     Install the CLI, redeem your key, and start your assessment in under 5 minutes.
   </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/candidates/troubleshooting">
-    Capture, auth, connectivity, and recovery — fixes for every common snag.
-  </Card>
-  <Card title="Hiring Team Quickstart" icon="users" href="/reviewers/quickstart">
+  <Card title="Hiring team quickstart" icon="clipboard-check" href="/reviewers/quickstart">
     Create your first assessment and generate candidate keys in minutes.
   </Card>
-  <Card title="API Reference" icon="code" href="/reviewers/api/authentication">
+  <Card title="Teams quickstart" icon="terminal" href="/teams/quickstart">
+    Connect your developer key and confirm capture is running in a few minutes.
+  </Card>
+  <Card title="API reference" icon="code" href="/reviewers/api/authentication">
     REST API for managing assessments, sessions, and reviewing candidate data.
   </Card>
 </CardGroup>
 
-## How it works
+## How Promptster for Hiring works
 
 <Steps>
   <Step title="Hiring team creates an assessment">
     Define the task brief, role, and time limit. Generate candidate keys to distribute.
   </Step>
   <Step title="Candidate redeems their key">
-    `promptster start PST-XXXX-XXXX` sets up the workspace and configures Claude Code or Cursor to capture the session — with the AI routed through Promptster, so the hiring team covers the cost.
+    `promptster start PST-XXXX-XXXX` sets up the workspace and configures Claude Code, Codex, or Cursor to capture the session. In the default managed mode the AI is routed through Promptster, so the hiring team covers the cost.
   </Step>
   <Step title="Candidate completes the task">
     They work normally. Promptster captures prompts, file diffs, commands, and the decisions they explain with `/explain`.
@@ -36,10 +55,10 @@ Promptster runs alongside Claude Code and Cursor during a coding assessment, cap
     `promptster done` uploads the workspace, closes the session, and returns a private replay link.
   </Step>
   <Step title="Hiring team reviews">
-    Browse the session timeline, read the candidate's decisions, and examine derived signals to evaluate engineering judgment.
+    Browse the session timeline, read the candidate's decisions, and examine the AI Fluency rubric to evaluate engineering judgment.
   </Step>
 </Steps>
 
 <Note>
-  Promptster only captures activity inside the assessment workspace and AI coding tool. Keystrokes, screen contents, clipboard, browser activity, and environment variables are never recorded. Session data is retained for 30 days. See [Privacy & Data](/candidates/privacy).
+  For hiring, Promptster only captures activity inside the assessment workspace and AI coding tool. Keystrokes, screen contents, clipboard, browser activity, and environment variables are never recorded. Session data is retained for 30 days. See [Privacy & Data](/candidates/privacy). Promptster for Teams goes further — source code never leaves the engineer's machine at all. See [Teams privacy & security](/teams/privacy).
 </Note>

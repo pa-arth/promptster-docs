@@ -1,0 +1,95 @@
+---
+title: "Install"
+description: "Install, verify, and update the Promptster for Teams CLI on macOS, Linux, or Windows."
+---
+
+The Promptster for Teams CLI is a single binary (`promptster-teams`) that tails your AI tool transcripts, redacts them on-device, and streams the result to your team's dashboard. It installs into its own directory, `~/.promptster-teams`, so it never collides with the hiring CLI.
+
+## System requirements
+
+- **macOS** (Intel or Apple Silicon), **Linux** (x64 or arm64), or **Windows** (npm install only)
+- **Claude Code** and/or **Codex** installed and having run at least once, so their transcript directories exist
+- A `PSE-XXXX-XXXX` developer key from your team admin
+- Network access to your team's Promptster dashboard host
+
+## Install
+
+<Tabs>
+  <Tab title="npm (recommended)">
+    Works on macOS, Linux, and Windows:
+
+    ```bash
+    npm install -g @promptster/teams-cli
+    ```
+
+    Published packages ship with build provenance. You can verify the supply chain before trusting the binary:
+
+    ```bash
+    npm audit signatures
+    ```
+
+    Requires Node.js 16 or newer.
+  </Tab>
+  <Tab title="Install script (macOS & Linux)">
+    Downloads a pre-built binary to `~/.promptster-teams/bin/promptster-teams`:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/pa-arth/promptster-teams-cli/main/install.sh | sh
+    ```
+
+    The script detects your OS and architecture, downloads the binary and its checksum, and **verifies the checksum before making the binary executable** — a mismatch aborts the install. It then adds `~/.promptster-teams/bin` to your shell profile.
+
+    Pin a specific version:
+
+    ```bash
+    PROMPTSTER_TEAMS_VERSION=0.5.0 sh -c "$(curl -fsSL https://raw.githubusercontent.com/pa-arth/promptster-teams-cli/main/install.sh)"
+    ```
+
+    <Note>
+      The install script supports macOS and Linux only. On Windows, use the npm install above.
+    </Note>
+  </Tab>
+  <Tab title="From source">
+    If you have Go installed:
+
+    ```bash
+    go install github.com/pa-arth/promptster-teams-cli/cmd/promptster-teams@latest
+    ```
+
+    Or clone the repository and run `make build` (binary in `bin/`) or `make install` (copies to `/usr/local/bin`).
+  </Tab>
+</Tabs>
+
+## Verify the install
+
+```bash
+promptster-teams version
+```
+
+You should see a version string like `0.5.0`. If the command isn't found after the script install, add the bin directory to your `PATH`:
+
+```bash
+export PATH="$HOME/.promptster-teams/bin:$PATH"
+```
+
+Add that line to your `~/.zshrc` or `~/.bashrc` to make it permanent, then restart your shell. To confirm your key, dashboard connectivity, and transcript directories are all wired up:
+
+```bash
+promptster-teams doctor
+```
+
+## Update
+
+Re-run your install method to upgrade:
+
+```bash
+npm install -g @promptster/teams-cli@latest
+# or, if you used the script:
+curl -fsSL https://raw.githubusercontent.com/pa-arth/promptster-teams-cli/main/install.sh | sh
+```
+
+The CLI does not upgrade itself silently.
+
+## Next steps
+
+Once installed, [connect your developer key](/teams/cli/connect) to start capturing.

@@ -1,0 +1,126 @@
+---
+title: "Troubleshooting"
+description: "Fixes for the common Teams CLI problems — no capture, connection failures, and install snags."
+---
+
+Start with the two diagnostics. `promptster-teams status` shows whether capture is running and what it's watching; `promptster-teams doctor` checks your key, dashboard connectivity, and transcript directories, and prints a fix for each problem.
+
+```bash
+promptster-teams status
+promptster-teams doctor
+```
+
+## Capture isn't recording anything
+
+<AccordionGroup>
+  <Accordion title="No developer key configured">
+    `watch` or `start` fails with a message that no developer key is configured. Connect with `login`, set the environment variable, or pass the key:
+
+    ```bash
+    promptster-teams login
+    # or
+    export PROMPTSTER_TEAMS_TOKEN=PSE-XXXX-XXXX
+    # or
+    promptster-teams watch --key PSE-XXXX-XXXX
+    ```
+
+    `doctor` also flags a key that's set but isn't a valid `PSE-` key.
+  </Accordion>
+
+  <Accordion title="The watched directory is too narrow">
+    This is the most common cause of silent capture. The CLI only captures transcripts whose working directory sits inside the watched directory (or one of its git worktrees). If you started capture from a subfolder or `/tmp`, your repos are outside the scope.
+
+    Check the watched directory in `status`, then re-run `login` — it defaults the scope to your home directory so all your repos are covered. To set it explicitly:
+
+    ```bash
+    export PROMPTSTER_TEAMS_WATCH_DIR="$HOME/code"
+    ```
+  </Accordion>
+
+  <Accordion title="Your AI tool hasn't created a transcript yet">
+    The CLI reads transcript files that Claude Code and Codex write to disk. If a tool has never run, its transcript directory doesn't exist yet and `doctor` reports it. Run the tool once, then check again. Only Claude Code and Codex are supported — Cursor transcripts are not captured.
+  </Accordion>
+
+  <Accordion title="Capture is silent — is it actually running?">
+    Background capture prints nothing by design. To watch it work, run in the foreground with debug logging:
+
+    ```bash
+    PROMPTSTER_DEBUG=1 promptster-teams watch
+    ```
+
+    You'll see a line per captured event. You can also confirm events are accumulating in `status` (the buffered-event count) or by tailing `~/.promptster-teams/buffer.jsonl`.
+  </Accordion>
+</AccordionGroup>
+
+## Managing the background process
+
+<AccordionGroup>
+  <Accordion title="status says capture isn't running">
+    Start it:
+
+    ```bash
+    promptster-teams start
+    ```
+
+    `start` is idempotent, so it's safe to run even if you're unsure.
+  </Accordion>
+
+  <Accordion title="stop can't find the process">
+    If capture was started without a tracked process ID, `stop` no-ops and points you to find it manually:
+
+    ```bash
+    pgrep -fl promptster-teams
+    ```
+
+    Then stop that process. Afterward, `start` (or `login`) gives you a properly tracked background process.
+  </Accordion>
+
+  <Accordion title="Capture looks degraded in the logs">
+    If a transcript's format changes or a watcher reads a large chunk without parsing an event, it marks itself degraded; a stale heartbeat is also logged. Check `~/.promptster-teams/daemon.log`, then restart capture:
+
+    ```bash
+    promptster-teams stop
+    promptster-teams start
+    ```
+
+    If it persists after an update, contact your admin.
+  </Accordion>
+</AccordionGroup>
+
+## Connection problems
+
+<AccordionGroup>
+  <Accordion title="Dashboard host not reachable">
+    `doctor` reports the host as unreachable. Confirm you're online and that `PROMPTSTER_TEAMS_API_URL` (if you set it) points at the right host. The check is a plain request with no auth, so a failure here is network or DNS, not your key.
+  </Accordion>
+
+  <Accordion title="A few events don't show up">
+    An occasional event the backend doesn't recognize is dropped without a retry, and capture stays healthy — that's expected and harmless. Persistent failures are different: an authentication error (your key was revoked), rate limiting, or a server error will surface as a real problem. Re-run `doctor`, and if your key was revoked, ask your admin for a new one.
+  </Accordion>
+</AccordionGroup>
+
+## Install snags
+
+<AccordionGroup>
+  <Accordion title="Command not found after the script install">
+    Add the bin directory to your `PATH` and restart your shell:
+
+    ```bash
+    export PATH="$HOME/.promptster-teams/bin:$PATH"
+    ```
+
+    Add that line to `~/.zshrc` or `~/.bashrc` to make it permanent.
+  </Accordion>
+
+  <Accordion title="Install script fails with a checksum error">
+    The installer verifies the downloaded binary against its checksum and aborts on a mismatch — a safety feature. Retry the install; if it keeps failing, the download may be corrupted or blocked by a proxy. Fall back to the npm install.
+  </Accordion>
+
+  <Accordion title="Installing on Windows">
+    The install script supports macOS and Linux only. On Windows, install with npm:
+
+    ```bash
+    npm install -g @promptster/teams-cli
+    ```
+  </Accordion>
+</AccordionGroup>

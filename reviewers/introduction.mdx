@@ -31,22 +31,13 @@ The chronological event log of everything captured during the session: prompts s
 
 **Decisions**
 
-Architecture choices the candidate explicitly documented during the session. When a candidate uses the Promptster MCP `capture_decision` tool, it records the choice, the rationale, and the tradeoffs considered. Decisions give you structured insight into engineering judgment without requiring the candidate to write a separate document.
+Choices the candidate explicitly documented during the session. When a candidate runs `/explain` (in Claude Code) or `promptster explain`, Promptster records a `decision_event` with the choice, its rationale, and the tradeoffs considered. Decisions are optional and candidate-authored — their absence is never held against a candidate — but when present they give you structured insight into engineering judgment without requiring a separate write-up.
 
 **Signals**
 
-Derived metrics computed from the timeline that evaluate specific aspects of the candidate's process:
+Promptster organizes the evidence from a session into the **AI Fluency rubric** (`ai_fluency_v1`) — eight dimensions such as `task_framing`, `direction_quality`, `steering_discernment`, and `verification_loop`, each rated with a tier and a confidence level. The ratings are backed by deterministic metrics (`promptCount`, `verifyIntensity`, `commandFailRate`, `manualEditRatio`, `firstChangeLatencyMs`, and more) and attributed, phase-nested signals that separate the candidate's own work from the model's.
 
-| Signal | What it measures |
-|--------|-----------------|
-| `promptCount` | Total prompts sent to the AI model |
-| `verifyIntensity` | How often the candidate tested or validated output relative to changes made |
-| `commandFailRate` | Ratio of failed shell commands — a signal of how carefully commands are constructed |
-| `manualEditRatio` | Fraction of file changes made by hand vs. accepted from AI suggestions |
-| `firstChangeLatencyMs` | Time from session start to first file edit — reflects planning behavior |
-| `aiAttributionPct` | Percentage of code changes attributable to AI-generated content |
-
-You can compare these signals across candidates in the same assessment using [cohort stats](/reviewers/api/assessments/cohort-stats).
+See [Signals](/reviewers/sessions/signals) for the full model, and compare candidates in the same assessment with [cohort stats](/reviewers/api/assessments/cohort-stats).
 
 ## How to get started
 
