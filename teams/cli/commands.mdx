@@ -49,9 +49,15 @@ Run `promptster-teams <command> [flags]`. In normal use you only run `login` onc
 
     ```bash
     promptster-teams watch
+    promptster-teams watch --key PSE-XXXX-XXXX   # supply the key inline
     ```
 
-    Combine with `PROMPTSTER_DEBUG=1` to print a line per captured event.
+    | Flag | Description |
+    |------|-------------|
+    | `--key PSE-…` | Use this developer key instead of a stored or environment one. |
+    | `--api-url <url>` | Point at a non-default dashboard host. |
+
+    `start` accepts the same two flags. Combine either with `PROMPTSTER_DEBUG=1` to print a line per captured event.
   </Accordion>
 </AccordionGroup>
 
