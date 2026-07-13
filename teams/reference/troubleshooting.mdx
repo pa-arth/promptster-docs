@@ -65,6 +65,16 @@ promptster-teams doctor
     `start` is idempotent, so it's safe to run even if you're unsure.
   </Accordion>
 
+  <Accordion title="Capture stopped after a reboot">
+    Background capture from `login` or `start` doesn't survive a machine restart on its own. Install the login service once so it comes back automatically after every reboot:
+
+    ```bash
+    promptster-teams autostart enable
+    ```
+
+    Confirm it's installed with `promptster-teams autostart status`. See [Commands](/teams/cli/commands#keep-capture-running-across-reboots).
+  </Accordion>
+
   <Accordion title="stop can't find the process">
     If capture was started without a tracked process ID, `stop` no-ops and points you to find it manually:
 
