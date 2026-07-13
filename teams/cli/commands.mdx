@@ -61,6 +61,38 @@ Run `promptster-teams <command> [flags]`. In normal use you only run `login` onc
   </Accordion>
 </AccordionGroup>
 
+## Keep capture running across reboots
+
+Background capture from `login` or `start` stops when your machine restarts. `autostart` installs a per-OS login service so capture comes back automatically after every reboot.
+
+<AccordionGroup>
+  <Accordion title="promptster-teams autostart enable — start capture at every login">
+    Installs a login service that runs capture automatically whenever you log in, so it survives reboots. Uses launchd on macOS, systemd `--user` on Linux, and a scheduled task (`schtasks`) on Windows. Idempotent — safe to run again to repair the service.
+
+    ```bash
+    promptster-teams autostart enable
+    ```
+
+    Run this once after `login`. The service runs the capture watcher, not `start`, and honors a single-instance lock so it won't collide with a capture you already have running.
+  </Accordion>
+
+  <Accordion title="promptster-teams autostart disable — stop starting at login">
+    Removes the login service so capture no longer starts automatically. Any capture running right now keeps going until you `stop` it or reboot.
+
+    ```bash
+    promptster-teams autostart disable
+    ```
+  </Accordion>
+
+  <Accordion title="promptster-teams autostart status — is autostart installed?">
+    Reports whether the login service is installed and where it lives on disk.
+
+    ```bash
+    promptster-teams autostart status
+    ```
+  </Accordion>
+</AccordionGroup>
+
 ## Status & diagnostics
 
 <AccordionGroup>

@@ -32,6 +32,16 @@ That's it. You don't run `login` again unless you get a new key.
   Some older onboarding snippets set an environment variable and run `watch` directly and don't mention `login`. `login` **is** the recommended path — it also starts background capture for you. The environment-variable path below still works if you prefer it.
 </Note>
 
+## Keep capture running across reboots
+
+`login` starts background capture, but that process doesn't survive a machine restart on its own. Run `autostart enable` once so capture comes back every time you log in:
+
+```bash
+promptster-teams autostart enable
+```
+
+This installs a per-OS login service (launchd on macOS, systemd `--user` on Linux, a scheduled task on Windows). Check it with `autostart status` and remove it with `autostart disable`. See [Commands](/teams/cli/commands#keep-capture-running-across-reboots) for details.
+
 ## The environment-variable path
 
 If you'd rather not store the key on disk — for example in an ephemeral or CI-like environment — set it in your environment and start capture yourself:

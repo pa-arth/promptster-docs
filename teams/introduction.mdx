@@ -18,7 +18,7 @@ The load-bearing promise: **Promptster for Teams never stores your source code.*
     A manager or admin creates a per-developer key in your team's Promptster dashboard and sends it to you. Keys look like `PSE-XXXX-XXXX`.
   </Step>
   <Step title="You connect once">
-    You install the CLI and run `promptster-teams login`. That saves your key and starts capture in the background. You don't run anything again day to day.
+    You install the CLI, run `promptster-teams login` to save your key and start capture, then `promptster-teams autostart enable` so it comes back after every reboot. You don't run anything again day to day.
   </Step>
   <Step title="Capture runs quietly">
     As you use **Claude Code** or **Codex**, the CLI tails their transcripts, redacts secrets and strips source locally, and ships the redacted metadata to the dashboard.
