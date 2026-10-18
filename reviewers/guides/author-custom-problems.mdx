@@ -43,7 +43,7 @@ Setup and tests run in a Linux box with Python 3.11, Node 22 (pnpm, vitest, jest
 ## Lifecycle: draft → ready
 
 1. Create returns `status: "draft"` and `prepStatus: "pending"`.
-2. A prep job clones the commit, runs `setupCommand`, checks the workspace loads (for Python, `pytest --collect-only`), then runs `testCommand` once.
+2. Wait for preparation to finish before using the problem.
 3. Poll `GET /v1/issues/custom/:id` (or `GET /v1/issues/:id`) every ~15 seconds. Prep usually takes a minute or two.
    - `prepStatus: "ready"`: `status` becomes `active`, and the problem can be used in an assessment.
    - `prepStatus: "failed"`: `prepError` says why in plain words (setup exited non-zero, no tests found, the command can't run). Fix it and PUT.

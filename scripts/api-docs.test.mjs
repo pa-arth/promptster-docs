@@ -17,6 +17,8 @@ test('reviewer navigation uses the real spec and exposes custom authoring', () =
     '/v1/issues': ['get'],
     '/v1/issues/custom': ['post'],
     '/v1/issues/custom/{id}': ['get', 'put'],
+    '/v1/org/keys': ['get'],
+    '/v1/candidates': ['get'],
   })) for (const method of methods) assert.ok(spec.paths[path]?.[method], `${method} ${path}`);
   for (const method of ['post', 'put']) {
     const path = method === 'post' ? '/v1/issues/custom' : '/v1/issues/custom/{id}';
