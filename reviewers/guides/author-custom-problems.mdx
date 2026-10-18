@@ -1,0 +1,213 @@
+---
+title: "Author custom problems via the API"
+description: "Create, prepare and edit a problem with your own repository, hidden tests and simulated teammates."
+---
+
+A customer's agent can create, prepare and edit its own assessment problems: a repo at a pinned commit, a brief, and hidden tests. Use the [OpenAPI specification](/api-reference/openapi.json) for request and response schemas.
+
+## Auth
+
+- Base URL: `https://api.promptster.ai`
+- Key: create an org API key in the dashboard under Settings → API. It starts with `psk_live_`.
+- Header: `Authorization: Bearer psk_live_...` on every request. A missing or wrong key returns 401. An org without an active plan gets 402 on create and edit; a free org not yet approved for early access gets 403 `early_access_required`.
+
+## Create: `POST /v1/issues/custom`
+
+The response is 201 `{ "issue": { "id": "custom-...", "status": "draft", "prepStatus": "pending", ... } }`. The problem can't be used until prep finishes (see Lifecycle).
+
+Body fields:
+
+- `repoUrl` (required): `https://github.com/<owner>/<repo>`. GitHub only.
+- `commitSha` (optional): 7–40 hex chars. Candidates start from this commit. If omitted, the head of the default branch is used.
+- `isPrivate` (default false): set it true for a private repo. The repo is then read with the org's GitHub token, which is added once under Settings → GitHub access. Candidates get a snapshot of the files with no `.git`, no history and no token.
+- `language` (required): one of `typescript`, `javascript`, `python`, `go`, `rust`, `java`, `ruby`, `csharp`, case-insensitive.
+- `difficulty` (required): `warmup`, `standard` or `deep`.
+- `title` (≤200 chars) and `taskBrief` (≤8000 chars): required for a plain problem. For a ticket-flow problem, leave them out; the ticket becomes both.
+- `skillTags`: up to 20 strings. `problemType`: `bug_fix` (default), `feature` or `performance`. `estimatedMinutes`: 1–600.
+- `testSuiteConfig` (required):
+  - `testFiles`: 1–20 of `{ fileName, destination, content }`. These are hidden from the candidate and copied into the repo at `destination` (a path inside the repo) when grading. Use full file contents.
+  - `testCommand` (≤500 chars): runs the hidden tests from the repo root, in the same directory setup ran in, so a `.venv` or `node_modules` that setup made is there. The tests may pass or fail on the starting commit; prep only needs them to run and be counted. Hidden test files are written at their `destination` after setup, overwriting any file already there.
+  - `setupCommand` (optional, ≤500 chars): installs dependencies, once, from the repo root, before the candidate arrives. It must exit 0. **Never run the tests here**: they fail on the starting commit, so prep could never pass. The API rejects a setup command that runs a test suite (`pytest`, `vitest`, `jest`, `go test`, `npm test`...). Installing a runner (`pip install pytest`) is fine. For Python, make a venv in setup (`python3 -m venv .venv && .venv/bin/pip install -q -e . pytest`) and run tests with `.venv/bin/python -m pytest`; the venv is part of what candidates and grading get, and the readiness check uses `.venv/bin/python` when it exists.
+  - `testFramework` (optional): e.g. `pytest`, `vitest`, `jest`, `go-test`, `node_test`. If omitted, it's detected.
+  - `timeoutSeconds` (optional): 1–1800, default 300.
+- `ticketFlow` (optional): makes it a ticket-flow problem, where the candidate works a ticket and can message simulated teammates who hold requirements the ticket leaves out.
+  - `ticket`: `key` (like `ENG-123`), `title`, `body` (≤8000), `acceptance` (1–20 strings), plus optional `labels` and `fields` `{label, value}`.
+  - `personas`: 1–4 of `{ id, name, role, owns, brief? }`. `id` is a lowercase slug. `brief` sets tone only; a brief that repeats wording from a hidden requirement is rejected.
+  - `requirements`: 1–30 of `{ id, owner, expect, ticketImplied, text, tests? }`. `owner` is a persona id, or `null` for held by nobody. Held by nobody means no teammate can reveal this requirement. It is still evaluated: an absent required row is marked missed, with no teammate-message evidence. Use this for facts the candidate can infer from the ticket or code. `ticketImplied` separately records whether the ticket implies it; it does not exempt a row from evaluation. `expect` is `required` or `cut`. `tests` (optional) links the requirement to hidden tests for the per-requirement report. It is matched only against node:test output whose test names start with `<name>:` (e.g. `test('dedupe-by-event-id: ignores a replay', …)` → `"tests": ["dedupe-by-event-id"]`). With pytest, vitest or jest the links show as untested; the suite's pass/fail still grades the submission. At least one requirement should be held by a persona, or there's nothing to ask about.
+  - `unavailability` (optional): `{ personaId, fromSec, toSec }` windows when a teammate doesn't answer. Omit it, or send `[]`, for none. With `ticketFlow`, any `title` or `taskBrief` you send is replaced by the ticket.
+
+## The box
+
+Setup and tests run in a Linux box with Python 3.11, Node 22 (pnpm, vitest, jest, mocha, tsx), Go 1.22, uv and pytest on PATH. Setup has outbound access to package registries and GitHub. The candidate's box has no GitHub access, so everything the repo needs must be in it or installed by setup. Snapshots are limited to 500 MB.
+
+## Lifecycle: draft → ready
+
+1. Create returns `status: "draft"` and `prepStatus: "pending"`.
+2. A prep job clones the commit, runs `setupCommand`, checks the workspace loads (for Python, `pytest --collect-only`), then runs `testCommand` once.
+3. Poll `GET /v1/issues/custom/:id` (or `GET /v1/issues/:id`) every ~15 seconds. Prep usually takes a minute or two.
+   - `prepStatus: "ready"`: `status` becomes `active`, and the problem can be used in an assessment.
+   - `prepStatus: "failed"`: `prepError` says why in plain words (setup exited non-zero, no tests found, the command can't run). Fix it and PUT.
+4. Drafts list under `GET /v1/issues?status=draft`. There is no delete; a failed draft can't reach candidates, so fix it with PUT or leave it.
+
+Using a problem that isn't ready in an assessment returns 409 `problem_not_ready`.
+
+## Read back and edit
+
+- `GET /v1/issues/custom/:id` returns `{ issue, input, inUse }`. `input` is the exact body PUT takes, including the hidden tests, and only the owning org can read it.
+- `PUT /v1/issues/custom/:id` takes the same body as POST and replaces the problem. It returns 200, resets it to a draft and runs prep again. Change what's wrong in `input` and send the whole thing back.
+- While preparation is pending, PUT returns 409 `problem_preparing`. Wait for preparation to finish before editing.
+- If an assessment already uses the problem, PUT returns 409 `problem_in_use`, because editing would change what those candidates get. Create a new problem instead.
+
+## Errors
+
+- 400 `Invalid body`: `details` is a list of zod issues. `details[0].path` names the field (e.g. `["testSuiteConfig","setupCommand"]`) and `message` says what to change.
+- 400 `Invalid repoUrl`: not a GitHub repo URL.
+- 400 `github_token_required`: `isPrivate` is true but the org has no GitHub token. Add one in Settings → GitHub access.
+- 400 `repo_not_accessible`: the org's token can't read the repo or commit. Grant the token access to that repo.
+- 400 `Invalid ticketFlow`: the ticket-flow problem doesn't hold together; see `details`.
+- 422 `Repository or commit not found`: unauthenticated GitHub can't see it. If the repo is private, set `isPrivate: true`; otherwise check the URL and SHA.
+- 422 `Repository is private or inaccessible`: set `isPrivate: true`.
+- 422 `brief_restates_requirement`: the persona in `personaId` has a brief that repeats a hidden requirement. Make it about tone, not facts.
+- 404 `Issue not found`: wrong id, or the problem belongs to another org.
+- 409 `problem_in_use` or `problem_preparing`: see Read back and edit.
+- 502/503: GitHub was unreachable or rate-limited. Retry shortly.
+
+## Example: plain problem
+
+```bash
+curl -sS -X POST https://api.promptster.ai/v1/issues/custom \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @- <<'JSON'
+{
+  "title": "Rate limiter lets bursts through after a restart",
+  "taskBrief": "After a deploy, the token bucket starts full for every client, so the first minute lets 10x the allowed traffic through. Make the bucket state survive a restart. The hidden tests exercise limiter.py directly.",
+  "repoUrl": "https://github.com/your-org/rate-limiter",
+  "commitSha": "3f1c2a9",
+  "isPrivate": false,
+  "language": "python",
+  "difficulty": "standard",
+  "skillTags": [
+    "rate-limiting",
+    "persistence"
+  ],
+  "estimatedMinutes": 60,
+  "testSuiteConfig": {
+    "setupCommand": "python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt pytest",
+    "testCommand": ".venv/bin/python -m pytest -q tests/test_hidden_limiter.py",
+    "testFramework": "pytest",
+    "timeoutSeconds": 300,
+    "testFiles": [
+      {
+        "fileName": "test_hidden_limiter.py",
+        "destination": "tests/test_hidden_limiter.py",
+        "content": "from limiter import Limiter\n\ndef test_state_survives_restart(tmp_path):\n    a = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert a.allow('c')\n    b = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert not b.allow('c')\n"
+      }
+    ]
+  }
+}
+JSON
+```
+
+## Example: ticket-flow problem (private repo)
+
+```bash
+curl -sS -X POST https://api.promptster.ai/v1/issues/custom \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @- <<'JSON'
+{
+  "repoUrl": "https://github.com/your-org/billing-service",
+  "isPrivate": true,
+  "language": "typescript",
+  "difficulty": "standard",
+  "skillTags": [
+    "billing",
+    "webhooks"
+  ],
+  "estimatedMinutes": 60,
+  "testSuiteConfig": {
+    "setupCommand": "pnpm install --frozen-lockfile",
+    "testCommand": "pnpm vitest run src/__tests__/eng-412.test.ts",
+    "testFramework": "vitest",
+    "testFiles": [
+      {
+        "fileName": "eng-412.test.ts",
+        "destination": "src/__tests__/eng-412.test.ts",
+        "content": "import { describe, it, expect } from 'vitest';\nimport { handleRefund } from '../refunds';\n\ndescribe('ENG-412', () => {\n  it('ignores a replayed webhook', async () => {\n    const evt = { id: 'evt_1', amount: 500 };\n    await handleRefund(evt);\n    expect(await handleRefund(evt)).toEqual({ status: 'duplicate' });\n  });\n});\n"
+      }
+    ]
+  },
+  "ticketFlow": {
+    "ticket": {
+      "key": "ENG-412",
+      "title": "Refund webhooks are processed twice",
+      "labels": [
+        "billing",
+        "bug"
+      ],
+      "fields": [
+        {
+          "label": "Priority",
+          "value": "High"
+        }
+      ],
+      "body": "Stripe retries refund webhooks when we answer slowly, and each retry issues another refund. Make refund handling safe to receive more than once.",
+      "acceptance": [
+        "A refund webhook delivered twice refunds the customer once"
+      ]
+    },
+    "personas": [
+      {
+        "id": "dana",
+        "name": "Dana Ortiz",
+        "role": "Payments lead",
+        "owns": "Refund policy and the Stripe integration",
+        "brief": "Direct and busy. Answers precisely when asked a precise question."
+      }
+    ],
+    "requirements": [
+      {
+        "id": "dedupe-by-event-id",
+        "owner": null,
+        "expect": "required",
+        "ticketImplied": true,
+        "text": "Deduplicate on the webhook event id"
+      },
+      {
+        "id": "keep-for-30-days",
+        "owner": "dana",
+        "expect": "required",
+        "ticketImplied": false,
+        "text": "Remember processed event ids for 30 days, matching Stripe's retry window"
+      }
+    ],
+    "unavailability": [
+      {
+        "personaId": "dana",
+        "fromSec": 600,
+        "toSec": 900
+      }
+    ]
+  }
+}
+JSON
+```
+
+Then poll until ready:
+
+```bash
+curl -sS https://api.promptster.ai/v1/issues/custom/$ID \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" | jq '.issue | {status, prepStatus, prepError}'
+```
+
+## Create an assessment from the ready problem
+
+After `prepStatus` becomes `ready`, pass the returned issue ID to [Create assessment](/reviewers/api/assessments/create). The API copies the problem's brief and repository; do not send a separate task brief or repository URL. Your organization must supply model access for the selected tools.
+
+```bash
+curl -sS -X POST https://api.promptster.ai/v1/assessments \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Backend work trial\",\"role\":\"Backend engineer\",\"issueId\":\"$ID\",\"allowedTools\":[\"claude\"]}"
+```

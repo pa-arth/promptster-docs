@@ -79,6 +79,7 @@
             "group": "Guides",
             "pages": [
               "reviewers/guides/run-assessment",
+              "reviewers/guides/author-custom-problems",
               "reviewers/guides/retrieve-results",
               "reviewers/guides/interpret-artifacts",
               "reviewers/guides/cohort-analysis",
@@ -90,6 +91,14 @@
             "group": "API Reference",
             "pages": [
               "reviewers/api/authentication"
+            ]
+          },
+          {
+            "group": "Custom problems",
+            "pages": [
+              "POST /v1/issues/custom",
+              "GET /v1/issues/custom/{id}",
+              "PUT /v1/issues/custom/{id}"
             ]
           },
           {
@@ -173,7 +182,8 @@
               "reviewers/resources/changelog"
             ]
           }
-        ]
+        ],
+        "openapi": "/api-reference/openapi.json"
       },
       {
         "tab": "Teams",
