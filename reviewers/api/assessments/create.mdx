@@ -4,7 +4,7 @@ api: "POST /v1/assessments"
 description: "Create a new hiring assessment for your organization."
 ---
 
-Create an assessment that defines the coding task candidates will complete. You can link it to an OSS issue from the Promptster problem library, or provide your own task brief and repo URL.
+Create an assessment that defines the coding task candidates will complete. Select an issue from the problem library, or [author a custom problem](/reviewers/guides/author-custom-problems) first. Every assessment requires an `issueId`; its initial brief and repository come from that problem.
 
 ### Authentication
 
@@ -22,16 +22,8 @@ Authorization: Bearer psk_live_...
   The role this assessment is for (e.g. "Senior Frontend Engineer").
 </ParamField>
 
-<ParamField body="taskBrief" type="string">
-  Markdown description of the task. Required if `issueId` is not provided. Auto-populated from the issue if omitted.
-</ParamField>
-
-<ParamField body="repoUrl" type="string">
-  URL of the repository candidates will work in. Must be a valid URL.
-</ParamField>
-
-<ParamField body="issueId" type="string">
-  ID of an OSS issue from the Promptster problem library. When provided, the task brief is auto-populated from the issue.
+<ParamField body="issueId" type="string" required>
+  ID of a ready problem from the library or your organization's custom problems. A custom problem still preparing returns 409 `problem_not_ready`.
 </ParamField>
 
 <ParamField body="timeLimitMinutes" type="integer">
@@ -46,16 +38,8 @@ Authorization: Bearer psk_live_...
   Maximum token spend allowed per candidate in USD. Must be positive and at most 1000. Claude Code and Codex draw from this **single shared** per-candidate budget — allowing both tools does not double it.
 </ParamField>
 
-<ParamField body="allowedTools" type="string[]" default='["claude","codex","cursor"]'>
-  Which AI coding tools the candidate may use. One or more of:
-
-  - `claude` — Claude Code. Requires an org **Anthropic** key.
-  - `codex` — Codex CLI. Requires an org **OpenAI** key.
-  - `cursor` — Cursor. The candidate brings their **own** Cursor subscription, so no org key is needed.
-
-  If you **omit** this field, it is auto-derived from the provider keys your org has configured: `claude` is included if a usable Anthropic key resolves, `codex` if a usable OpenAI key resolves, and `cursor` is always included.
-
-  If you **set** it explicitly, your org must have a usable key for each selected tool's provider (`claude` → Anthropic, `codex` → OpenAI; `cursor` needs none), otherwise creation fails with `400 { "code": "byok_required" }`.
+<ParamField body="allowedTools" type="string[]">
+  Allow `claude` (Claude Code), `codex` (Codex CLI), or both. Your organization must supply a usable Anthropic key for Claude and an OpenAI key for Codex. If omitted, tools are derived from usable provider keys. Cursor and candidate-paid subscriptions are retired and return 400.
 </ParamField>
 
 <ParamField body="anthropicKeyMode" type="string" default="org_default">
@@ -90,7 +74,7 @@ Authorization: Bearer psk_live_...
     <ResponseField name="issueId" type="string | null">Linked OSS issue ID.</ResponseField>
     <ResponseField name="timeLimitMinutes" type="integer | null">Time limit in minutes.</ResponseField>
     <ResponseField name="tokenBudgetUsd" type="number | null">Token budget in USD.</ResponseField>
-    <ResponseField name="allowedTools" type="string[]">The resolved set of tools the candidate may use (`claude`, `codex`, `cursor`).</ResponseField>
+    <ResponseField name="allowedTools" type="string[]">The resolved set of tools the candidate may use (`claude`, `codex`).</ResponseField>
     <ResponseField name="expiresInDays" type="integer">Key expiry period in days.</ResponseField>
     <ResponseField name="createdAt" type="string">ISO 8601 timestamp.</ResponseField>
   </Expandable>
@@ -106,10 +90,10 @@ Authorization: Bearer psk_live_...
     "role": "Senior Frontend Engineer",
     "taskBrief": "Fix the stale closure bug in the useEffect hook that causes the counter to show incorrect values after rapid clicks.",
     "repoUrl": "https://github.com/acme/frontend-challenge",
-    "issueId": null,
+    "issueId": "custom-your-ready-problem-id",
     "timeLimitMinutes": 60,
     "tokenBudgetUsd": 25.0,
-    "allowedTools": ["claude", "codex", "cursor"],
+    "allowedTools": ["claude", "codex"],
     "expiresInDays": 7,
     "createdAt": "2026-04-07T10:30:00.000Z"
   }
@@ -125,11 +109,10 @@ curl -X POST https://api.promptster.ai/v1/assessments \
   -d '{
     "title": "React State Management Bug Fix",
     "role": "Senior Frontend Engineer",
-    "taskBrief": "Fix the stale closure bug in the useEffect hook.",
-    "repoUrl": "https://github.com/acme/frontend-challenge",
+    "issueId": "custom-your-ready-problem-id",
     "timeLimitMinutes": 60,
     "tokenBudgetUsd": 25.0,
-    "allowedTools": ["claude", "codex", "cursor"],
+    "allowedTools": ["claude", "codex"],
     "anthropicKeyMode": "byok",
     "anthropicKeyId": "11111111-2222-3333-4444-555555555555",
     "openaiKeyMode": "byok",

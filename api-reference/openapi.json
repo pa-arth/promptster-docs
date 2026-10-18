@@ -1,0 +1,3990 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Promptster reviewer API",
+    "version": "1.0.0",
+    "description": "Public hiring API for organization API keys (psk_live_…). Requests are scoped to the owning organization. Dashboard-only and candidate-only operations are excluded. Unknown response fields may be added; artifact payloads depend on kind."
+  },
+  "servers": [
+    {
+      "url": "https://api.promptster.ai"
+    }
+  ],
+  "security": [
+    {
+      "orgApiKey": []
+    }
+  ],
+  "paths": {
+    "/v1/assessments": {
+      "get": {
+        "summary": "List assessments",
+        "operationId": "getVAssessments",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Assessment"
+                      }
+                    }
+                  },
+                  "required": [
+                    "assessments"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create assessment",
+        "operationId": "postVAssessments",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment": {
+                      "$ref": "#/components/schemas/Assessment"
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {},
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "assessment"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, retired model access or lane, or missing/invalid/ambiguous organization provider key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Active subscription required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Early access approval required, or assessment quota exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Custom problem preparation is not ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "problem_not_ready"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssessment"
+              }
+            }
+          }
+        },
+        "description": "Create from a registered issue, including a ready custom problem. Initial brief and repository come from the issue. Your organization supplies model access for every allowed tool."
+      }
+    },
+    "/v1/assessments/{id}": {
+      "get": {
+        "summary": "Get assessment",
+        "operationId": "getVAssessmentsId",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment": {
+                      "$ref": "#/components/schemas/Assessment"
+                    }
+                  },
+                  "required": [
+                    "assessment"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "patch": {
+        "summary": "Update assessment",
+        "operationId": "patchVAssessmentsId",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assessment": {
+                      "$ref": "#/components/schemas/Assessment"
+                    }
+                  },
+                  "required": [
+                    "assessment"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid patch or model access configuration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssessment"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete assessment",
+        "operationId": "deleteVAssessmentsId",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "id"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Soft-deletes the assessment and its candidate keys."
+      }
+    },
+    "/v1/assessments/{id}/keys": {
+      "get": {
+        "summary": "List candidate keys",
+        "operationId": "getVAssessmentsIdKeys",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CandidateKey"
+                      }
+                    }
+                  },
+                  "required": [
+                    "keys"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Generate candidate keys",
+        "operationId": "postVAssessmentsIdKeys",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CandidateKey"
+                      }
+                    }
+                  },
+                  "required": [
+                    "keys"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Active subscription required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Early access approval required, or assessment quota exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Problem is not ready.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "problem_not_ready"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50
+                  },
+                  "candidateEmails": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "email"
+                    }
+                  },
+                  "candidateNames": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "orgName": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "count"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Creates invitations and prepares hosted workspaces. Keys with emails include invite send outcomes; failed delivery does not change the 201 status."
+      }
+    },
+    "/v1/assessments/{id}/keys/{keyId}": {
+      "delete": {
+        "summary": "Delete candidate key",
+        "operationId": "deleteVAssessmentsIdKeysKeyid",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "id"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/assessments/{id}/keys/{keyId}/resend": {
+      "post": {
+        "summary": "Resend invitation",
+        "operationId": "postVAssessmentsIdKeysKeyidResend",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "invite": {
+                      "$ref": "#/components/schemas/Invite"
+                    }
+                  },
+                  "required": [
+                    "invite"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/assessments/{id}/cohort-stats": {
+      "get": {
+        "summary": "Get assessment cohort statistics",
+        "operationId": "getVAssessmentsIdCohortStats",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cohortStats": {
+                      "$ref": "#/components/schemas/CohortStats"
+                    }
+                  },
+                  "required": [
+                    "cohortStats"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/assessments/{id}/personas": {
+      "get": {
+        "summary": "List assessment teammates",
+        "operationId": "getVAssessmentsIdPersonas",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "personas": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HiringPersona"
+                      }
+                    }
+                  },
+                  "required": [
+                    "personas"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/assessments/{id}/personas/{personaId}/brief": {
+      "put": {
+        "summary": "Set teammate behavior",
+        "operationId": "putVAssessmentsIdPersonasPersonaidBrief",
+        "tags": [
+          "Assessments"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HiringPersona"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Brief repeats hidden requirement wording.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "brief_restates_requirement",
+                  "message": "The brief repeats wording from the hidden spec. Briefs set tone, not facts."
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "personaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "brief": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "brief"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Tone only; null removes the assessment override. Limited to 20 saves per hour per organization and assessment."
+      }
+    },
+    "/v1/issues": {
+      "get": {
+        "summary": "List problems",
+        "operationId": "getVIssues",
+        "tags": [
+          "Problems"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Issue"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "issues",
+                    "total",
+                    "limit",
+                    "offset"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "problemType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "active",
+              "description": "Use draft to list your custom problems still preparing or whose preparation failed."
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ]
+      }
+    },
+    "/v1/issues/{id}": {
+      "get": {
+        "summary": "Get problem",
+        "operationId": "getVIssuesId",
+        "tags": [
+          "Problems"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "issue"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/issues/custom": {
+      "post": {
+        "summary": "Create custom problem",
+        "operationId": "postVIssuesCustom",
+        "tags": [
+          "Custom problems"
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "issue"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body/repository/ticket flow or missing/inaccessible GitHub token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Invalid body",
+                  "details": [
+                    {
+                      "path": [
+                        "testSuiteConfig",
+                        "setupCommand"
+                      ],
+                      "message": "Setup must not run tests."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Active subscription required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Early access approval required, or assessment quota exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Repository or commit not found/private, or persona brief restates a hidden requirement.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "brief_restates_requirement",
+                  "personaId": "dana",
+                  "message": "The brief repeats wording from the hidden spec. Briefs set tone, not facts."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to save custom problem.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Could not reach GitHub or unexpected GitHub response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GitHub rate limit exceeded; retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomProblemInput"
+              },
+              "examples": {
+                "plainPython": {
+                  "value": {
+                    "title": "Rate limiter lets bursts through after a restart",
+                    "taskBrief": "After a deploy, the token bucket starts full for every client, so the first minute lets 10x the allowed traffic through. Make the bucket state survive a restart. The hidden tests exercise limiter.py directly.",
+                    "repoUrl": "https://github.com/your-org/rate-limiter",
+                    "commitSha": "3f1c2a9",
+                    "isPrivate": false,
+                    "language": "python",
+                    "difficulty": "standard",
+                    "skillTags": [
+                      "rate-limiting",
+                      "persistence"
+                    ],
+                    "estimatedMinutes": 60,
+                    "testSuiteConfig": {
+                      "setupCommand": "python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt pytest",
+                      "testCommand": ".venv/bin/python -m pytest -q tests/test_hidden_limiter.py",
+                      "testFramework": "pytest",
+                      "timeoutSeconds": 300,
+                      "testFiles": [
+                        {
+                          "fileName": "test_hidden_limiter.py",
+                          "destination": "tests/test_hidden_limiter.py",
+                          "content": "from limiter import Limiter\n\ndef test_state_survives_restart(tmp_path):\n    a = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert a.allow('c')\n    b = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert not b.allow('c')\n"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "ticketFlow": {
+                  "value": {
+                    "repoUrl": "https://github.com/your-org/billing-service",
+                    "isPrivate": true,
+                    "language": "typescript",
+                    "difficulty": "standard",
+                    "skillTags": [
+                      "billing",
+                      "webhooks"
+                    ],
+                    "estimatedMinutes": 60,
+                    "testSuiteConfig": {
+                      "setupCommand": "pnpm install --frozen-lockfile",
+                      "testCommand": "pnpm vitest run src/__tests__/eng-412.test.ts",
+                      "testFramework": "vitest",
+                      "testFiles": [
+                        {
+                          "fileName": "eng-412.test.ts",
+                          "destination": "src/__tests__/eng-412.test.ts",
+                          "content": "import { describe, it, expect } from 'vitest';\nimport { handleRefund } from '../refunds';\n\ndescribe('ENG-412', () => {\n  it('ignores a replayed webhook', async () => {\n    const evt = { id: 'evt_1', amount: 500 };\n    await handleRefund(evt);\n    expect(await handleRefund(evt)).toEqual({ status: 'duplicate' });\n  });\n});\n"
+                        }
+                      ]
+                    },
+                    "ticketFlow": {
+                      "ticket": {
+                        "key": "ENG-412",
+                        "title": "Refund webhooks are processed twice",
+                        "labels": [
+                          "billing",
+                          "bug"
+                        ],
+                        "fields": [
+                          {
+                            "label": "Priority",
+                            "value": "High"
+                          }
+                        ],
+                        "body": "Stripe retries refund webhooks when we answer slowly, and each retry issues another refund. Make refund handling safe to receive more than once.",
+                        "acceptance": [
+                          "A refund webhook delivered twice refunds the customer once"
+                        ]
+                      },
+                      "personas": [
+                        {
+                          "id": "dana",
+                          "name": "Dana Ortiz",
+                          "role": "Payments lead",
+                          "owns": "Refund policy and the Stripe integration",
+                          "brief": "Direct and busy. Answers precisely when asked a precise question."
+                        }
+                      ],
+                      "requirements": [
+                        {
+                          "id": "dedupe-by-event-id",
+                          "owner": null,
+                          "expect": "required",
+                          "ticketImplied": true,
+                          "text": "Deduplicate on the webhook event id"
+                        },
+                        {
+                          "id": "keep-for-30-days",
+                          "owner": "dana",
+                          "expect": "required",
+                          "ticketImplied": false,
+                          "text": "Remember processed event ids for 30 days, matching Stripe's retry window"
+                        }
+                      ],
+                      "unavailability": [
+                        {
+                          "personaId": "dana",
+                          "fromSec": 600,
+                          "toSec": 900
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Creates a draft and starts asynchronous preparation. Poll the custom detail endpoint until prepStatus is ready or failed. A failed enqueue can return prepStatus failed even on a successful save."
+      }
+    },
+    "/v1/issues/custom/{id}": {
+      "get": {
+        "summary": "Read custom problem for editing",
+        "operationId": "getVIssuesCustomId",
+        "tags": [
+          "Custom problems"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "$ref": "#/components/schemas/Issue"
+                    },
+                    "input": {
+                      "$ref": "#/components/schemas/CustomProblemInput"
+                    },
+                    "inUse": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "issue",
+                    "input",
+                    "inUse"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Owning organization only. Includes hidden tests and requirements; never expose this response to candidates."
+      },
+      "put": {
+        "summary": "Replace custom problem",
+        "operationId": "putVIssuesCustomId",
+        "tags": [
+          "Custom problems"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "issue"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body/repository/ticket flow or missing/inaccessible GitHub token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Invalid body",
+                  "details": [
+                    {
+                      "path": [
+                        "testSuiteConfig",
+                        "setupCommand"
+                      ],
+                      "message": "Setup must not run tests."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Active subscription required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Early access approval required, or assessment quota exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Repository or commit not found/private, or persona brief restates a hidden requirement.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "brief_restates_requirement",
+                  "personaId": "dana",
+                  "message": "The brief repeats wording from the hidden spec. Briefs set tone, not facts."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to save custom problem.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Could not reach GitHub or unexpected GitHub response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "GitHub rate limit exceeded; retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "problem_in_use: an assessment already uses it; create a new problem. problem_preparing: preparation is pending; wait until it finishes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "problem_preparing",
+                  "message": "This problem is still being prepared. Edit it once preparation finishes."
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomProblemInput"
+              }
+            }
+          }
+        },
+        "description": "Full replacement using the same body as create. Resets the problem to draft and prepares it again. No delete endpoint exists."
+      }
+    },
+    "/v1/sessions": {
+      "get": {
+        "summary": "List sessions",
+        "operationId": "getVSessions",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Session"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "sessions",
+                    "total",
+                    "limit",
+                    "offset"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "assessmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sourceService",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}": {
+      "get": {
+        "summary": "Get session",
+        "operationId": "getVSessionsId",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "session": {
+                      "$ref": "#/components/schemas/Session"
+                    }
+                  },
+                  "required": [
+                    "session"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/artifacts": {
+      "get": {
+        "summary": "List session artifacts",
+        "operationId": "getVSessionsIdArtifacts",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Artifact"
+                      }
+                    }
+                  },
+                  "required": [
+                    "artifacts"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Returns reviewer artifacts, including analytics and grading, when available. An empty array can mean nothing has been produced. Use this with an organization API key; the /analytics shortcut requires a dashboard token."
+      }
+    },
+    "/v1/sessions/{id}/timeline": {
+      "get": {
+        "summary": "Get session timeline",
+        "operationId": "getVSessionsIdTimeline",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Event"
+                      }
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "events",
+                    "hasMore"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000,
+              "default": 500
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Event ID cursor."
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/decisions": {
+      "get": {
+        "summary": "List candidate decisions",
+        "operationId": "getVSessionsIdDecisions",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "decisions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Event"
+                      }
+                    }
+                  },
+                  "required": [
+                    "decisions"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/scores": {
+      "get": {
+        "summary": "Get session signals",
+        "operationId": "getVSessionsIdScores",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "scores": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {},
+                        "additionalProperties": true
+                      }
+                    },
+                    "prompterScore": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {},
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "scores",
+                    "prompterScore"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/prompt-analytics": {
+      "get": {
+        "summary": "Get prompt analytics",
+        "operationId": "getVSessionsIdPromptAnalytics",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "promptAnalytics": {}
+                  },
+                  "required": [
+                    "promptAnalytics"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Not computed yet; retry in a few seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "computing"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/interview-followups": {
+      "get": {
+        "summary": "Get interview follow-ups",
+        "operationId": "getVSessionsIdInterviewFollowups",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string"
+                    },
+                    "derivationV": {
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "interviewFollowups": {
+                      "type": "object",
+                      "properties": {},
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "derivationV",
+                    "interviewFollowups",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Interview follow-ups not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Interview follow-ups artifact is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/sessions/{id}/cohort-stats": {
+      "get": {
+        "summary": "Get session cohort statistics",
+        "operationId": "getVSessionsIdCohortStats",
+        "tags": [
+          "Sessions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cohortStats": {
+                      "$ref": "#/components/schemas/CohortStats"
+                    }
+                  },
+                  "required": [
+                    "cohortStats"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/org/keys": {
+      "get": {
+        "summary": "List provider keys",
+        "description": "Masked list of the organization's active Anthropic and OpenAI keys, to find a `keyId` when creating an assessment. Requires the `read` scope.",
+        "operationId": "getVOrgKeys",
+        "tags": [
+          "Organization"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProviderKey"
+                      }
+                    }
+                  },
+                  "required": [
+                    "keys"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/candidates": {
+      "get": {
+        "summary": "List candidates",
+        "description": "Every candidate key across the organization's assessments, oldest first.",
+        "operationId": "getVCandidates",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CandidateListItem"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "candidates",
+                    "total",
+                    "limit",
+                    "offset"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "orgApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Organization API key from Settings → API. Send Authorization: Bearer psk_live_… ."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {}
+          },
+          "personaId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "error"
+        ]
+      },
+      "TestFile": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "destination": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "fileName",
+          "destination",
+          "content"
+        ]
+      },
+      "TestSuiteConfig": {
+        "type": "object",
+        "properties": {
+          "testFiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestFile"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "testCommand": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Runs from the repository root after setup. Hidden files overwrite destination paths after setup. Preparation requires tests to run and be counted, not to pass."
+          },
+          "setupCommand": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Install dependencies only. Must exit zero; commands that run test suites are rejected."
+          },
+          "testFramework": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "timeoutSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1800,
+            "default": 300
+          },
+          "edgeCaseFiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TestFile"
+            },
+            "maxItems": 20
+          },
+          "edgeCaseCommand": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "hygieneRules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "testFiles",
+          "testCommand"
+        ]
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9]+-\\d+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "acceptance": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "maxItems": 10,
+            "default": []
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 40
+                },
+                "value": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ]
+            },
+            "maxItems": 12,
+            "default": []
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "body",
+          "acceptance"
+        ]
+      },
+      "Persona": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "owns": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "brief": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Tone and habits only. Repeating hidden requirements returns 422 brief_restates_requirement."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "owns"
+        ]
+      },
+      "Requirement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Persona ID, or null when held by nobody. No teammate can reveal an unowned row; it is still evaluated and an absent required row is missed, with no teammate-message evidence."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expect": {
+            "type": "string",
+            "enum": [
+              "required",
+              "cut"
+            ]
+          },
+          "ticketImplied": {
+            "type": "boolean",
+            "description": "Whether the ticket implies this requirement. Independent of owner and not an evaluation exemption."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 20,
+            "description": "Links to node:test TAP names before the colon, e.g. dedupe: handles retry. pytest/vitest/jest links are untested; suite pass/fail still applies."
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "expect",
+          "ticketImplied",
+          "text"
+        ]
+      },
+      "TicketFlow": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          "personas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Persona"
+            },
+            "minItems": 1,
+            "maxItems": 4
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Requirement"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "unavailability": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "personaId": {
+                  "type": "string"
+                },
+                "fromSec": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "toSec": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "personaId",
+                "fromSec",
+                "toSec"
+              ]
+            },
+            "maxItems": 10
+          }
+        },
+        "description": "Persona and requirement IDs must each be unique. Owners and unavailability personaId must refer to a persona. fromSec must precede toSec. With ticketFlow, the ticket replaces title and taskBrief.",
+        "required": [
+          "ticket",
+          "personas",
+          "requirements"
+        ]
+      },
+      "Brief": {
+        "type": "object",
+        "properties": {
+          "scenario": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "codebase": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "stack": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "maxItems": 12
+              },
+              "runCommand": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "testCommand": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              }
+            },
+            "additionalProperties": false
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "goal": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "tasks": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "maxItems": 10
+                },
+                "guidance": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "maxItems": 10
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ]
+            },
+            "maxItems": 6
+          },
+          "evaluation": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "maxItems": 10
+          },
+          "groundRules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "maxItems": 10
+          },
+          "deliverables": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "maxItems": 10
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomProblemInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "taskBrief": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "brief": {
+            "$ref": "#/components/schemas/Brief"
+          },
+          "repoUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "GitHub repository URL: https://github.com/owner/repo"
+          },
+          "commitSha": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{7,40}$",
+            "description": "Omit to pin the current default-branch head."
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "default": false,
+            "description": "Uses the organization GitHub token from Settings → GitHub access. Candidates receive a snapshot without credentials or history."
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "typescript",
+              "javascript",
+              "python",
+              "go",
+              "rust",
+              "java",
+              "ruby",
+              "csharp"
+            ]
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "warmup",
+              "standard",
+              "deep"
+            ]
+          },
+          "skillTags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 20,
+            "default": []
+          },
+          "problemType": {
+            "type": "string",
+            "enum": [
+              "bug_fix",
+              "feature",
+              "performance"
+            ],
+            "default": "bug_fix"
+          },
+          "estimatedMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "testSuiteConfig": {
+            "$ref": "#/components/schemas/TestSuiteConfig"
+          },
+          "ticketFlow": {
+            "$ref": "#/components/schemas/TicketFlow"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "ticketFlow"
+            ]
+          },
+          {
+            "required": [
+              "title",
+              "taskBrief"
+            ]
+          }
+        ],
+        "description": "POST creates; PUT fully replaces. language is trimmed and lowercased before validation. A successful save starts preparation; inspect issue.prepStatus, including on the initial response.",
+        "required": [
+          "repoUrl",
+          "language",
+          "difficulty",
+          "testSuiteConfig"
+        ]
+      },
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "issueTitle": {
+            "type": "string"
+          },
+          "repoUrl": {
+            "type": "string"
+          },
+          "brokenSha": {
+            "type": "string"
+          },
+          "taskBrief": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "isCustom": {
+            "type": "boolean"
+          },
+          "isPrivate": {
+            "type": "boolean"
+          },
+          "isTicketFlow": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "prepStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "ready",
+                  "failed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prepError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "testSuiteVerified": {
+            "type": "boolean"
+          },
+          "issueUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id"
+        ]
+      },
+      "CreateAssessment": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "issueId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "referencePlan": {
+            "type": "string",
+            "minLength": 1
+          },
+          "conventionsDoc": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rubricId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "timeLimitMinutes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expiresInDays": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 7
+          },
+          "tokenBudgetUsd": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1000
+          },
+          "allowedTools": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "minItems": 1,
+            "description": "Requires usable organization provider keys. Omit to derive tools from available keys. Cursor and candidate-paid subscriptions are retired."
+          },
+          "anthropicKeyMode": {
+            "type": "string",
+            "enum": [
+              "org_default",
+              "byok"
+            ]
+          },
+          "anthropicKeyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openaiKeyMode": {
+            "type": "string",
+            "enum": [
+              "org_default",
+              "byok"
+            ]
+          },
+          "openaiKeyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hostingLane": {
+            "type": "string",
+            "enum": [
+              "local",
+              "hosted"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "role",
+          "issueId"
+        ]
+      },
+      "UpdateAssessment": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "referencePlan": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conventionsDoc": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeLimitMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresInDays": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tokenBudgetUsd": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "allowedTools": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude",
+                "codex"
+              ]
+            },
+            "minItems": 1,
+            "description": "Requires usable organization provider keys. Omit to derive tools from available keys. Cursor and candidate-paid subscriptions are retired."
+          },
+          "anthropicKeyMode": {
+            "type": "string",
+            "enum": [
+              "org_default",
+              "byok"
+            ]
+          },
+          "anthropicKeyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openaiKeyMode": {
+            "type": "string",
+            "enum": [
+              "org_default",
+              "byok"
+            ]
+          },
+          "openaiKeyId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hostingLane": {
+            "type": "string",
+            "enum": [
+              "local",
+              "hosted"
+            ]
+          },
+          "taskBrief": {
+            "type": "string",
+            "minLength": 1
+          },
+          "brief": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Brief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "minProperties": 1
+      },
+      "Assessment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "issueId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "taskBrief": {
+            "type": "string"
+          },
+          "repoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeLimitMinutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresInDays": {
+            "type": "integer"
+          },
+          "tokenBudgetUsd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hostingLane": {
+            "type": "string",
+            "enum": [
+              "local",
+              "hosted"
+            ]
+          },
+          "allowedTools": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Issue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string"
+          },
+          "sourceService": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "eventCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id"
+        ]
+      },
+      "Artifact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "data": {},
+          "derivationV": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "sessionId",
+          "kind",
+          "data"
+        ]
+      },
+      "CandidateKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "assessmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidateName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "invite": {
+            "$ref": "#/components/schemas/Invite"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "key"
+        ]
+      },
+      "Invite": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "sent",
+              "skipped",
+              "failed"
+            ]
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "data": {}
+        },
+        "additionalProperties": true
+      },
+      "CohortStats": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "sessionCount": {
+                "type": "integer"
+              },
+              "metrics": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              },
+              "percentiles": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "sessionCount",
+              "metrics"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "HiringPersona": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "owns": {
+            "type": "string"
+          },
+          "brief": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "briefSource": {
+            "type": "string",
+            "enum": [
+              "problem",
+              "assessment",
+              "none"
+            ]
+          },
+          "defaultBrief": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "ProviderKey": {
+        "type": "object",
+        "description": "A provider (BYOK) key, masked. Never includes the secret.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "anthropic",
+              "openai"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastValidatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "prefix",
+          "isDefault"
+        ]
+      },
+      "CandidateListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "candidateName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "candidateEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "redeemedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "maxBudgetUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "assessmentId": {
+            "type": "string"
+          },
+          "assessmentTitle": {
+            "type": "string"
+          },
+          "totalCostUsd": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "status",
+          "assessmentId",
+          "assessmentTitle",
+          "totalCostUsd"
+        ]
+      }
+    }
+  }
+}
