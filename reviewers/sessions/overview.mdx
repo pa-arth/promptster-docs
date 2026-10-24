@@ -82,6 +82,16 @@ The `provenance` object on each event describes how the change came to exist.
 | `mixed` | Attribution is uncertain |
 | `system_generated` | System event (CI, hooks) |
 
+### Cross-checked attribution
+
+Each capture source labels its own events from what it alone can see, so Promptster cross-checks those labels against the other sources before they reach you:
+
+- **Editor reloads of agent writes.** When the agent writes a file that is open in the editor, the editor sees the change but not who made it. Those events are attributed to the AI (`likely_ai`), never reported as candidate pastes.
+- **Git-detected changes.** A change detected from git while the candidate was typing in that same file is attributed to the candidate (`likely_human`, or `ai_revised_by_human` if the agent had written the file before). A change with no typing in that file while the agent's shell was running stays with the AI.
+- **Decisions the agent filed.** A `decision_event` written by the agent through the `explain` command (rather than typed by the candidate) is attributed to the AI.
+
+A corrected event keeps its original label in `data._reconciled` (`{ "rule": "...", "from": { "attribution": "...", "actor": "..." } }`), and `provenance.methods` gains `reconciled:<rule>`. Events with no `_reconciled` field were not changed.
+
 <Note>
   Attribution is not a binary "AI wrote this / human wrote this" judgment. Promptster tracks provenance with confidence levels. A high `likely_ai` attribution with the candidate verifying and committing the result is normal and expected — prompting well is the work.
 </Note>
