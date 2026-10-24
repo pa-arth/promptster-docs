@@ -56,11 +56,30 @@ Using a problem that isn't ready in an assessment returns 409 `problem_not_ready
 - `GET /v1/issues/custom/:id` returns `{ issue, input, inUse }`. `input` is the exact body PUT takes, including the hidden tests, and only the owning org can read it.
 - `PUT /v1/issues/custom/:id` takes the same body as POST and replaces the problem. It returns 200, resets it to a draft and runs prep again. Change what's wrong in `input` and send the whole thing back.
 - While preparation is pending, PUT returns 409 `problem_preparing`. Wait for preparation to finish before editing.
-- If an assessment already uses the problem, PUT returns 409 `problem_in_use`, because editing would change what those candidates get. Make a copy and edit that instead (below).
+- If an assessment already uses the problem, PUT returns 409 `problem_in_use`, because editing would change what those candidates get. Its `versionsUrl` is where to send the same body to save the edit as a new version instead (below).
+
+## Versions
+
+Every custom problem has a stable `lineageId` (the ID of its first version) and a `version` number. Editing a problem an assessment uses creates the next version instead of a new, unrelated problem:
+
+- `POST /v1/issues/custom/:id/versions` takes the same body as POST and returns 201 with the next version: a new `id`, the same `lineageId`, `version` one higher than the newest. It is a draft and preparation runs again. `:id` can be any version of the problem, in use or not.
+- Assessments keep the version they were created with. A new version never changes what their candidates get.
+- `GET /v1/issues/custom/:id/versions` lists every version, oldest first, with `status`, `prepStatus`, `inUse` and `assessmentCount`. `latestReadyIssueId` is the version a new assessment on the lineage would get now.
+- To always use the newest ready version, create assessments with `lineageId` instead of `issueId` (see [Create assessment](/reviewers/api/assessments/create)). The version is fixed when the assessment is created; the response's `problem` says which one.
+- `GET /v1/issues` lists the newest version of each problem for the requested `status`, so a version still preparing doesn't hide the ready one before it. Add `allVersions=true` to list every version.
+
+```bash
+curl -sS -X POST https://api.promptster.ai/v1/issues/custom/$ISSUE_ID/versions \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @problem.json | jq '.issue | {id, lineageId, version, prepStatus}'
+```
+
+To make the edit from what is saved, read `input` from `GET /v1/issues/custom/:id`, change it, and send it as the body.
 
 ## Copy a problem
 
-`POST /v1/issues/custom/:id/duplicate` (no body) copies a problem's author input, including the hidden tests, into a new problem with ` (copy)` added to the title. It works when assessments already use the source, which stays unchanged. It returns 201 with the new problem as a draft and runs preparation again; nothing from the source's preparation is reused. Use the new `id` in your next assessment.
+`POST /v1/issues/custom/:id/duplicate` (no body) copies a problem's author input, including the hidden tests, into a new problem with ` (copy)` added to the title. It works when assessments already use the source, which stays unchanged. It returns 201 with the new problem as a draft and runs preparation again; nothing from the source's preparation is reused. The copy starts its own lineage at version 1. To fix a problem rather than fork it, create a version (above).
 
 ```bash
 curl -sS -X POST https://api.promptster.ai/v1/issues/custom/$ISSUE_ID/duplicate \
@@ -81,6 +100,7 @@ To copy and change something in one step, read `input` from `GET /v1/issues/cust
 - 422 `brief_restates_requirement`: the persona in `personaId` has a brief that repeats a hidden requirement. Make it about tone, not facts.
 - 404 `Issue not found`: wrong id, or the problem belongs to another org.
 - 409 `problem_in_use` or `problem_preparing`: see Read back and edit.
+- 409 `version_conflict`: another version of the problem was created at the same moment. Retry.
 - 502/503: GitHub was unreachable or rate-limited. Retry shortly.
 
 ## Example: plain problem
@@ -214,7 +234,7 @@ curl -sS https://api.promptster.ai/v1/issues/custom/$ID \
 
 ## Create an assessment from the ready problem
 
-After `prepStatus` becomes `ready`, pass the returned issue ID to [Create assessment](/reviewers/api/assessments/create). The API copies the problem's brief and repository; do not send a separate task brief or repository URL. Your organization must supply model access for the selected tools.
+After `prepStatus` becomes `ready`, pass the returned issue ID (or its `lineageId`, to get the newest ready version) to [Create assessment](/reviewers/api/assessments/create). The API copies the problem's brief and repository; do not send a separate task brief or repository URL. Your organization must supply model access for the selected tools.
 
 ```bash
 curl -sS -X POST https://api.promptster.ai/v1/assessments \

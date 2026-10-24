@@ -91,6 +91,26 @@
                         "properties": {},
                         "additionalProperties": true
                       }
+                    },
+                    "problem": {
+                      "type": "object",
+                      "description": "The problem version this assessment is pinned to.",
+                      "properties": {
+                        "issueId": {
+                          "type": "string"
+                        },
+                        "lineageId": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "issueId",
+                        "lineageId",
+                        "version"
+                      ]
                     }
                   },
                   "required": [
@@ -1175,6 +1195,19 @@
               "minimum": 0,
               "default": 0
             }
+          },
+          {
+            "name": "allVersions",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": "false",
+              "description": "By default only the newest version of each problem with the requested status is listed. true lists every version."
+            }
           }
         ]
       }
@@ -1723,15 +1756,26 @@
             }
           },
           "409": {
-            "description": "problem_in_use: an assessment already uses it; create a new problem. problem_preparing: preparation is pending; wait until it finishes.",
+            "description": "problem_in_use: an assessment already uses it; send the same body to versionsUrl to create a new version instead. problem_preparing: preparation is pending; wait until it finishes.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 },
-                "example": {
-                  "error": "problem_preparing",
-                  "message": "This problem is still being prepared. Edit it once preparation finishes."
+                "examples": {
+                  "problem_in_use": {
+                    "value": {
+                      "error": "problem_in_use",
+                      "message": "An assessment already uses this problem, so editing it would change what those candidates get. Create a new version instead (POST to versionsUrl with the same body); existing assessments keep this one.",
+                      "versionsUrl": "/v1/issues/custom/custom-org_abc-1a2b3c4d/versions"
+                    }
+                  },
+                  "problem_preparing": {
+                    "value": {
+                      "error": "problem_preparing",
+                      "message": "This problem is still being prepared. Edit it once preparation finishes."
+                    }
+                  }
                 }
               }
             }
@@ -2647,6 +2691,394 @@
           }
         }
       }
+    },
+    "/v1/issues/custom/{id}/versions": {
+      "post": {
+        "summary": "Create new problem version",
+        "operationId": "postVIssuesCustomIdVersions",
+        "tags": [
+          "Custom problems"
+        ],
+        "description": "Saves the body as the next version of this problem's lineage, whether or not an assessment uses it. The new version is a draft and is prepared again. Existing assessments keep their version.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Any version of the problem."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomProblemInput"
+              },
+              "examples": {
+                "plainPython": {
+                  "value": {
+                    "title": "Rate limiter lets bursts through after a restart",
+                    "taskBrief": "After a deploy, the token bucket starts full for every client, so the first minute lets 10x the allowed traffic through. Make the bucket state survive a restart. The hidden tests exercise limiter.py directly.",
+                    "repoUrl": "https://github.com/your-org/rate-limiter",
+                    "commitSha": "3f1c2a9",
+                    "isPrivate": false,
+                    "language": "python",
+                    "difficulty": "standard",
+                    "skillTags": [
+                      "rate-limiting",
+                      "persistence"
+                    ],
+                    "estimatedMinutes": 60,
+                    "testSuiteConfig": {
+                      "setupCommand": "python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt pytest",
+                      "testCommand": ".venv/bin/python -m pytest -q tests/test_hidden_limiter.py",
+                      "testFramework": "pytest",
+                      "timeoutSeconds": 300,
+                      "testFiles": [
+                        {
+                          "fileName": "test_hidden_limiter.py",
+                          "destination": "tests/test_hidden_limiter.py",
+                          "content": "from limiter import Limiter\n\ndef test_state_survives_restart(tmp_path):\n    a = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert a.allow('c')\n    b = Limiter(rate=1, burst=1, state_dir=tmp_path)\n    assert not b.allow('c')\n"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "ticketFlow": {
+                  "value": {
+                    "repoUrl": "https://github.com/your-org/billing-service",
+                    "isPrivate": true,
+                    "language": "typescript",
+                    "difficulty": "standard",
+                    "skillTags": [
+                      "billing",
+                      "webhooks"
+                    ],
+                    "estimatedMinutes": 60,
+                    "testSuiteConfig": {
+                      "setupCommand": "pnpm install --frozen-lockfile",
+                      "testCommand": "pnpm vitest run src/__tests__/eng-412.test.ts",
+                      "testFramework": "vitest",
+                      "testFiles": [
+                        {
+                          "fileName": "eng-412.test.ts",
+                          "destination": "src/__tests__/eng-412.test.ts",
+                          "content": "import { describe, it, expect } from 'vitest';\nimport { handleRefund } from '../refunds';\n\ndescribe('ENG-412', () => {\n  it('ignores a replayed webhook', async () => {\n    const evt = { id: 'evt_1', amount: 500 };\n    await handleRefund(evt);\n    expect(await handleRefund(evt)).toEqual({ status: 'duplicate' });\n  });\n});\n"
+                        }
+                      ]
+                    },
+                    "ticketFlow": {
+                      "ticket": {
+                        "key": "ENG-412",
+                        "title": "Refund webhooks are processed twice",
+                        "labels": [
+                          "billing",
+                          "bug"
+                        ],
+                        "fields": [
+                          {
+                            "label": "Priority",
+                            "value": "High"
+                          }
+                        ],
+                        "body": "Stripe retries refund webhooks when we answer slowly, and each retry issues another refund. Make refund handling safe to receive more than once.",
+                        "acceptance": [
+                          "A refund webhook delivered twice refunds the customer once"
+                        ]
+                      },
+                      "personas": [
+                        {
+                          "id": "dana",
+                          "name": "Dana Ortiz",
+                          "role": "Payments lead",
+                          "owns": "Refund policy and the Stripe integration",
+                          "brief": "Direct and busy. Answers precisely when asked a precise question."
+                        }
+                      ],
+                      "requirements": [
+                        {
+                          "id": "dedupe-by-event-id",
+                          "owner": null,
+                          "expect": "required",
+                          "ticketImplied": true,
+                          "text": "Deduplicate on the webhook event id"
+                        },
+                        {
+                          "id": "keep-for-30-days",
+                          "owner": "dana",
+                          "expect": "required",
+                          "ticketImplied": false,
+                          "text": "Remember processed event ids for 30 days, matching Stripe's retry window"
+                        }
+                      ],
+                      "unavailability": [
+                        {
+                          "personaId": "dana",
+                          "fromSec": 600,
+                          "toSec": 900
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "issue": {
+                      "$ref": "#/components/schemas/Issue"
+                    }
+                  },
+                  "required": [
+                    "issue"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body/repository/ticket flow or missing/inaccessible GitHub token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Invalid body",
+                  "details": [
+                    {
+                      "path": [
+                        "testSuiteConfig",
+                        "setupCommand"
+                      ],
+                      "message": "Setup must not run tests."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Active subscription required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Early access approval required, or assessment quota exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Repository or commit not found/private, or persona brief restates a hidden requirement.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "brief_restates_requirement",
+                  "personaId": "dana",
+                  "message": "The brief repeats wording from the hidden spec. Briefs set tone, not facts."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "version_conflict: another version was created at the same moment. Retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List problem versions",
+        "operationId": "getVIssuesCustomIdVersions",
+        "tags": [
+          "Custom problems"
+        ],
+        "description": "Every version in this problem's lineage, oldest first. latestReadyIssueId is the version a new assessment created with lineageId gets now.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Any version of the problem."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lineageId": {
+                      "type": "string"
+                    },
+                    "latestReadyIssueId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "prepStatus": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "pending",
+                              "ready",
+                              "failed",
+                              null
+                            ]
+                          },
+                          "prepError": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "inUse": {
+                            "type": "boolean"
+                          },
+                          "assessmentCount": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "version",
+                          "status",
+                          "inUse",
+                          "assessmentCount"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "lineageId",
+                    "latestReadyIssueId",
+                    "versions"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3262,6 +3694,15 @@
                 "type": "null"
               }
             ]
+          },
+          "lineageId": {
+            "type": "string",
+            "description": "Stable ID of the problem across versions: the ID of version 1."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "This row's version within its lineage."
           }
         },
         "additionalProperties": true,
@@ -3284,7 +3725,13 @@
           },
           "issueId": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "That exact problem version. Send this or lineageId, not both."
+          },
+          "lineageId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A custom problem's lineageId. Resolves to the newest ready version at creation time; the assessment keeps it. Send this or issueId, not both."
           },
           "referencePlan": {
             "type": "string",
@@ -3370,8 +3817,19 @@
         },
         "required": [
           "title",
-          "role",
-          "issueId"
+          "role"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "issueId"
+            ]
+          },
+          {
+            "required": [
+              "lineageId"
+            ]
+          }
         ]
       },
       "UpdateAssessment": {

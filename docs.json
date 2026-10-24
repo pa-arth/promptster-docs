@@ -98,7 +98,9 @@
             "pages": [
               "POST /v1/issues/custom",
               "GET /v1/issues/custom/{id}",
-              "PUT /v1/issues/custom/{id}"
+              "PUT /v1/issues/custom/{id}",
+              "POST /v1/issues/custom/{id}/versions",
+              "GET /v1/issues/custom/{id}/versions"
             ]
           },
           {

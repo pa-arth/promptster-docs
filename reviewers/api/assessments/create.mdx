@@ -4,7 +4,7 @@ api: "POST /v1/assessments"
 description: "Create a new hiring assessment for your organization."
 ---
 
-Create an assessment that defines the coding task candidates will complete. Select an issue from the problem library, or [author a custom problem](/reviewers/guides/author-custom-problems) first. Every assessment requires an `issueId`; its initial brief and repository come from that problem.
+Create an assessment that defines the coding task candidates will complete. Select an issue from the problem library, or [author a custom problem](/reviewers/guides/author-custom-problems) first. Every assessment requires an `issueId` or a `lineageId`; its initial brief and repository come from that problem.
 
 ### Authentication
 
@@ -22,8 +22,12 @@ Authorization: Bearer psk_live_...
   The role this assessment is for (e.g. "Senior Frontend Engineer").
 </ParamField>
 
-<ParamField body="issueId" type="string" required>
-  ID of a ready problem from the library or your organization's custom problems. A custom problem still preparing returns 409 `problem_not_ready`.
+<ParamField body="issueId" type="string">
+  ID of a ready problem from the library or your organization's custom problems: that exact version. A custom problem still preparing returns 409 `problem_not_ready`. Send this or `lineageId`, not both.
+</ParamField>
+
+<ParamField body="lineageId" type="string">
+  A custom problem's stable ID (its `lineageId`, the ID of version 1). Resolves to the newest version whose preparation is ready, at creation time; the assessment keeps that version when newer ones are made. Returns 409 `problem_not_ready` if no version is ready yet. Send this or `issueId`, not both.
 </ParamField>
 
 <ParamField body="timeLimitMinutes" type="integer">
@@ -80,6 +84,15 @@ Authorization: Bearer psk_live_...
   </Expandable>
 </ResponseField>
 
+<ResponseField name="problem" type="object">
+  The problem version this assessment is pinned to.
+  <Expandable title="properties">
+    <ResponseField name="issueId" type="string">The version's ID (same as `assessment.issueId`).</ResponseField>
+    <ResponseField name="lineageId" type="string">The problem's stable ID.</ResponseField>
+    <ResponseField name="version" type="integer">The version number within the lineage.</ResponseField>
+  </Expandable>
+</ResponseField>
+
 <ResponseExample>
 ```json 201
 {
@@ -96,6 +109,11 @@ Authorization: Bearer psk_live_...
     "allowedTools": ["claude", "codex"],
     "expiresInDays": 7,
     "createdAt": "2026-04-07T10:30:00.000Z"
+  },
+  "problem": {
+    "issueId": "custom-your-ready-problem-id",
+    "lineageId": "custom-your-ready-problem-id",
+    "version": 1
   }
 }
 ```
