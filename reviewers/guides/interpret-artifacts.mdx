@@ -193,30 +193,37 @@ Identified turning points in the session -- moments where the candidate's approa
 
 ## test_results_v1
 
-Results from the automated test suite run during submission.
+Results from the hidden test suite, run against the candidate's final code.
 
 ```json
 {
-  "passed": 12,
-  "failed": 1,
-  "skipped": 2,
-  "total": 15,
-  "duration_ms": 4500,
-  "details": [
-    {
-      "name": "should rate limit after threshold",
-      "status": "passed",
-      "duration_ms": 120
-    },
-    {
-      "name": "should handle concurrent requests",
-      "status": "failed",
-      "error": "Expected 429, received 200",
-      "duration_ms": 350
-    }
-  ]
+  "passed": 7,
+  "failed": 7,
+  "total": 14,
+  "results": {
+    "passed": 7,
+    "failed": 7,
+    "skipped": 0,
+    "total": 14,
+    "tests": [
+      { "name": "tests/hidden/test_hidden.py::test_no_retry_on_4xx[401]", "status": "passed" },
+      { "name": "tests/hidden/test_hidden.py::test_numbers_match_queue", "status": "failed" }
+    ]
+  },
+  "exitCode": 1,
+  "stdout": "...",
+  "stdoutTruncated": true,
+  "stdoutLength": 135210,
+  "stderr": "",
+  "stderrTruncated": false,
+  "layers": [{ "layer": "verification", "results": { "passed": 7, "failed": 7, "skipped": 0, "total": 14 } }],
+  "verifiedAt": "2026-10-24T06:57:22.021Z"
 }
 ```
+
+- `passed`, `failed` and `total` repeat `results`. Skipped tests are counted in `results.skipped`. A top-level `skipped: true` means the suite did not run, and `skipReason` says why.
+- `results.tests` lists each test's outcome (`passed`, `failed`, `skipped` or `error`). It is present for pytest suites. Count from it, not from the log.
+- Logs longer than 65,536 characters keep their beginning and end, with a marker in the middle. The runner's summary line is at the end, so it survives. `stdoutTruncated` and `stderrTruncated` say whether a log was cut, and `stdoutLength` and `stderrLength` give the original length. Older results kept only the beginning of a long log, which can drop the summary line. They report `stdoutTruncated: true` without a length.
 
 <Tip>
 For assessments using the OSS issue library, test results directly indicate whether the candidate fixed the bug. All tests passing means the fix is correct.
