@@ -117,7 +117,7 @@ curl "https://api.promptster.ai/v1/sessions/$SESSION_ID/timeline?limit=500" \
   -H "Authorization: Bearer $PROMPTSTER_API_KEY"
 ```
 
-Returns the full event stream (prompts, file diffs, commands, decisions) in chronological order. Supports cursor-based pagination via the `after` parameter.
+Returns the full event stream (prompts, file diffs, commands, decisions) in chronological order. While `hasMore` is `true`, pass the response's `nextCursor` as `after` to fetch the next page.
 
 ## Build a results pipeline
 

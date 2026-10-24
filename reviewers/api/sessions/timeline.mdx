@@ -4,7 +4,7 @@ api: "GET /v1/sessions/:id/timeline"
 description: "Retrieve the timeline of events for a session with cursor-based pagination."
 ---
 
-Returns the ordered timeline of events captured during a session. Events include prompts, commands, file diffs, decisions, and more. Supports cursor-based pagination via the `after` parameter.
+Returns the timeline of events captured during a session, ordered by `ts` (events with the same timestamp keep a stable order). Events include prompts, commands, file diffs, decisions, and more. Supports cursor-based pagination via the `after` parameter.
 
 ### Authentication
 
@@ -23,13 +23,13 @@ Authorization: Bearer psk_live_...
 </ParamField>
 
 <ParamField query="after" type="string">
-  Cursor for pagination. Pass the `id` of the last event from the previous page to get the next page.
+  Cursor for pagination. Pass the `nextCursor` from the previous page to get the next page. The `id` of the previous page's last event is also accepted. A cursor that does not name an event in this session returns `400`.
 </ParamField>
 
 <ResponseField name="events" type="array">
   List of timeline event objects.
   <Expandable title="properties">
-    <ResponseField name="id" type="string">Event ID (used as cursor for pagination).</ResponseField>
+    <ResponseField name="id" type="string">Event ID.</ResponseField>
     <ResponseField name="sessionId" type="string">Session ID.</ResponseField>
     <ResponseField name="kind" type="string">
       Event type. Common kinds: `prompt`, `command`, `file_diff`, `decision_event`, `thinking_pause`, `error_cascade_recovery`, `test_failure_pivot`.
@@ -42,7 +42,11 @@ Authorization: Bearer psk_live_...
 </ResponseField>
 
 <ResponseField name="hasMore" type="boolean">
-  Whether there are more events beyond this page. Use the last event's `id` as the `after` cursor to fetch the next page.
+  Whether there are more events beyond this page.
+</ResponseField>
+
+<ResponseField name="nextCursor" type="string | null">
+  Opaque cursor for the next page. Pass it as `after`. `null` when `hasMore` is `false`.
 </ResponseField>
 
 <ResponseExample>
@@ -93,7 +97,8 @@ Authorization: Bearer psk_live_...
       "createdAt": "2026-04-07T09:07:05.000Z"
     }
   ],
-  "hasMore": false
+  "hasMore": false,
+  "nextCursor": null
 }
 ```
 </ResponseExample>
@@ -101,6 +106,10 @@ Authorization: Bearer psk_live_...
 <RequestExample>
 ```bash curl
 curl "https://api.promptster.ai/v1/sessions/sess_abc123/timeline?limit=100" \
+  -H "Authorization: Bearer psk_live_abc123def456"
+
+# Next page
+curl "https://api.promptster.ai/v1/sessions/sess_abc123/timeline?limit=100&after=$NEXT_CURSOR" \
   -H "Authorization: Bearer psk_live_abc123def456"
 ```
 </RequestExample>
