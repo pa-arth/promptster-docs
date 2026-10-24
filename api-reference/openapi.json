@@ -2905,7 +2905,7 @@
               "minLength": 1
             },
             "maxItems": 20,
-            "description": "Links to node:test TAP names before the colon, e.g. dedupe: handles retry. pytest/vitest/jest links are untested; suite pass/fail still applies."
+            "description": "Links to node:test TAP names before the colon, e.g. dedupe: handles retry, or to any trailing part of a pytest node id (test_retry, test_retry[502], TestPoller, TestPoller::test_retry, test_queue.py, or the full id). vitest/jest links are untested; suite pass/fail still applies."
           }
         },
         "required": [
