@@ -2015,12 +2015,29 @@
                     },
                     "hasMore": {
                       "type": "boolean"
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page; pass as `after`. Null when hasMore is false."
                     }
                   },
                   "required": [
                     "events",
                     "hasMore"
                   ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`after` is not a valid cursor, or names no event in this session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -2080,7 +2097,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "description": "Event ID cursor."
+              "description": "Opaque page cursor: the previous page's `nextCursor`. The last event's `id` is also accepted."
             }
           }
         ]
