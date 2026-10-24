@@ -62,6 +62,11 @@ Using a problem that isn't ready in an assessment returns 409 `problem_not_ready
 
 `POST /v1/issues/custom/:id/duplicate` (no body) copies a problem's author input, including the hidden tests, into a new problem with ` (copy)` added to the title. It works when assessments already use the source, which stays unchanged. It returns 201 with the new problem as a draft and runs preparation again; nothing from the source's preparation is reused. Use the new `id` in your next assessment.
 
+```bash
+curl -sS -X POST https://api.promptster.ai/v1/issues/custom/$ISSUE_ID/duplicate \
+  -H "Authorization: Bearer $PROMPTSTER_API_KEY"
+```
+
 To copy and change something in one step, read `input` from `GET /v1/issues/custom/:id`, edit it, and `POST /v1/issues/custom` with it. That runs preparation once instead of twice (duplicate, then PUT).
 
 ## Errors
