@@ -2032,6 +2032,16 @@
               }
             }
           },
+          "400": {
+            "description": "`after` is not a valid cursor, or names no event in this session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Missing, invalid or expired credential.",
             "content": {
