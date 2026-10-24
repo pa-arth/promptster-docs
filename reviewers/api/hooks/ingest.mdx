@@ -121,6 +121,7 @@ Every event you send must have a `kind` from this list. The `data` payload requi
 | `build_run` | — | |
 | `git_action` | `action` | `ref`, `message`, `commit` optional |
 | `decision_event` | — | `title`, `chosenOption`, `context`, `tradeoffs`, `rationale`, `impactScore` are indexed by the reviewer dashboard |
+| `question_answer` | — | Claude asked the candidate a multiple-choice question and the candidate answered or dismissed it. See [Questions and answers](#questions-and-answers) |
 | `session_start` | — | `cwd` and `assessmentId` in `data` are auto-promoted into session metadata |
 | `session_end` | — | Triggers session finalization and scoring pipeline |
 | `checkpoint` | — | `label`, `trigger`, `summary` optional |
@@ -128,6 +129,25 @@ Every event you send must have a `kind` from this list. The `data` payload requi
 | `tool_result` | — | `tool_call` is accepted as a legacy alias and normalized to `tool_result` |
 | `planning` | — | |
 | `mcp_call` | — | |
+
+### Questions and answers
+
+When Claude Code asks the candidate a multiple-choice question (its AskUserQuestion tool), the CLI records one `question_answer` event at the moment the candidate answers. The actor is the candidate.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | `answered`, or `declined` when the candidate dismissed the question |
+| `questions` | array | One entry per question Claude asked |
+| `questions[].question` | string | The question text |
+| `questions[].header` | string | Short label Claude gave the question (optional) |
+| `questions[].multiSelect` | boolean | Whether more than one option could be picked |
+| `questions[].options` | array | `{ label, description? }` for every option shown. Empty on events reconstructed for sessions recorded before this event existed (`data.backfilled: true`) |
+| `questions[].selected` | string[] | Labels of the options the candidate picked |
+| `questions[].otherText` | string | Free text the candidate typed into "Other" (optional) |
+| `questions[].answer` | string | The answer exactly as Claude received it (optional) |
+| `questions[].notes` | string | A note the candidate added to the answer (optional) |
+
+A `prompt` with `data.queued: true` is a message the candidate typed while Claude was still working. Claude Code delivers it inside the running turn instead of starting a new one, so it can sit between AI events; its `ts` is when the candidate sent it.
 
 For `decision_event`, the following `data` fields are indexed in the decisions table and surfaced in the reviewer dashboard:
 
