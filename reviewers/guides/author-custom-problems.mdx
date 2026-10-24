@@ -56,7 +56,13 @@ Using a problem that isn't ready in an assessment returns 409 `problem_not_ready
 - `GET /v1/issues/custom/:id` returns `{ issue, input, inUse }`. `input` is the exact body PUT takes, including the hidden tests, and only the owning org can read it.
 - `PUT /v1/issues/custom/:id` takes the same body as POST and replaces the problem. It returns 200, resets it to a draft and runs prep again. Change what's wrong in `input` and send the whole thing back.
 - While preparation is pending, PUT returns 409 `problem_preparing`. Wait for preparation to finish before editing.
-- If an assessment already uses the problem, PUT returns 409 `problem_in_use`, because editing would change what those candidates get. Create a new problem instead.
+- If an assessment already uses the problem, PUT returns 409 `problem_in_use`, because editing would change what those candidates get. Make a copy and edit that instead (below).
+
+## Copy a problem
+
+`POST /v1/issues/custom/:id/duplicate` (no body) copies a problem's author input, including the hidden tests, into a new problem with ` (copy)` added to the title. It works when assessments already use the source, which stays unchanged. It returns 201 with the new problem as a draft and runs preparation again; nothing from the source's preparation is reused. Use the new `id` in your next assessment.
+
+To copy and change something in one step, read `input` from `GET /v1/issues/custom/:id`, edit it, and `POST /v1/issues/custom` with it. That runs preparation once instead of twice (duplicate, then PUT).
 
 ## Errors
 

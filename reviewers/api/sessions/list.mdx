@@ -27,7 +27,7 @@ Authorization: Bearer psk_live_...
 </ParamField>
 
 <ParamField query="assessmentId" type="string">
-  Filter to sessions linked to a specific assessment.
+  Filter to sessions that ran under this assessment. Must be a UUID; anything else returns 400.
 </ParamField>
 
 <ResponseField name="sessions" type="array">
@@ -43,6 +43,7 @@ Authorization: Bearer psk_live_...
     <ResponseField name="eventCount" type="integer">Total number of timeline events.</ResponseField>
     <ResponseField name="decisionFlagCount" type="integer">Number of flagged decisions.</ResponseField>
     <ResponseField name="aiAttributionPct" type="number | null">Percentage of code attributed to AI.</ResponseField>
+    <ResponseField name="assessmentId" type="string | null">The assessment this session ran under, or `null` if it did not run under one.</ResponseField>
     <ResponseField name="totalCostUsd" type="number">Total LLM token cost in USD.</ResponseField>
     <ResponseField name="createdAt" type="string">ISO 8601 creation timestamp.</ResponseField>
     <ResponseField name="updatedAt" type="string">ISO 8601 last update timestamp.</ResponseField>
@@ -76,6 +77,8 @@ Authorization: Bearer psk_live_...
       "eventCount": 142,
       "decisionFlagCount": 3,
       "aiAttributionPct": 72.5,
+      "assessmentId": "64e13927-dad3-4f50-8bd4-c6b596278225",
+    "assessmentId": "64e13927-dad3-4f50-8bd4-c6b596278225",
       "totalCostUsd": 3.42,
       "createdAt": "2026-04-07T09:00:00.000Z",
       "updatedAt": "2026-04-07T10:15:00.000Z"
