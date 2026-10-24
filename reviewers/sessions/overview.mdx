@@ -51,7 +51,7 @@ The timeline is the ordered, immutable log of every event captured during a sess
 
 | Kind | What it represents |
 |------|--------------------|
-| `prompt` | A prompt submitted to the AI |
+| `prompt` | A prompt submitted to the AI. `data.queued: true` marks one typed while the AI was still working |
 | `ai_response` | The AI's response |
 | `file_diff` | A file change (contains path, diff, lines added/removed) |
 | `file_create` | A new file created |
@@ -59,6 +59,7 @@ The timeline is the ordered, immutable log of every event captured during a sess
 | `test_run` | A test suite run (contains passed/failed/skipped counts) |
 | `git_action` | A git operation (commit, branch, etc.) |
 | `decision_event` | A captured architecture decision |
+| `question_answer` | A multiple-choice question Claude asked the candidate, with the options and the candidate's answer |
 | `session_start` | Session started |
 | `session_end` | Session ended (candidate ran `promptster done`) |
 | `checkpoint` | A manual or automatic session checkpoint |
