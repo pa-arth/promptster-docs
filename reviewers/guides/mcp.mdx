@@ -1,0 +1,84 @@
+---
+title: "Use Promptster from Claude (MCP)"
+description: "Connect Claude, Cursor, or any MCP client to Promptster to run assessments and read raw session telemetry for grading."
+---
+
+To drive Promptster from an AI assistant, connect it to the Promptster MCP server. Your assistant can then list problems, create assessments, invite candidates, and read each session's raw event log and teammate conversations, without you writing API calls.
+
+The MCP server uses the same API key and the same rules as the [REST API](/reviewers/api/authentication). Inviting candidates through it uses your plan's assessments exactly as the dashboard does.
+
+## Connect
+
+Create an API key in the dashboard under **Settings → API Keys**, then add the server.
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add --transport http promptster-hire https://api.promptster.ai/mcp/hire \
+      --header "Authorization: Bearer psk_live_..."
+    ```
+  </Tab>
+  <Tab title="Other MCP clients">
+    Add a Streamable HTTP server:
+
+    ```json
+    {
+      "mcpServers": {
+        "promptster-hire": {
+          "type": "http",
+          "url": "https://api.promptster.ai/mcp/hire",
+          "headers": { "Authorization": "Bearer psk_live_..." }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  The API key acts for your whole organization. Keep it in your MCP client's local config, not in a shared repository.
+</Warning>
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `list_problems` | Problems an assessment can be built from: the library and your custom problems. |
+| `list_assessments`, `get_assessment` | Your assessments. |
+| `create_assessment` | Create an assessment from a problem. Does not use plan quota. |
+| `send_candidates` | Email invitations to up to 50 candidates. Each candidate uses one assessment from your plan. Sends to your own team's email domain are free. |
+| `list_candidates` | An assessment's candidates, their status, and each `sessionId` once they start. |
+| `resend_invitation` | Re-send a candidate's invitation. |
+| `get_session`, `get_session_scores` | A session's summary and Promptster's signals. |
+| `get_session_telemetry` | The raw event log, in order. See below. |
+| `get_teammate_conversations` | Every message between the candidate and the assessment's AI teammates. |
+
+## Grade with raw telemetry
+
+To grade a session yourself, have your assistant read the event log with `get_session_telemetry`. It returns events oldest first, 200 per page by default. Pass the returned `nextCursor` back as `cursor` while `hasMore` is true.
+
+Sessions often run to hundreds of events. To read one stream, pass `kinds` as a comma-separated list:
+
+| Stream | `kinds` |
+|---|---|
+| What the candidate asked for | `prompt` |
+| What the model did | `model_turn,ai_response,tool_intent,tool_use` |
+| Code changes | `file_create,file_diff,file_delete` |
+| Terminal | `command` |
+| Where the candidate looked | `file_read,editor_focus,editor_edit,editor_idle,web_lookup` |
+| Decisions and answers | `decision_event,question_answer` |
+
+`get_teammate_conversations` returns the full teammate thread in one call. Each message has a `direction`: `to_persona` is the candidate writing, `from_persona` is the teammate replying.
+
+A prompt that works well:
+
+```text
+For each completed candidate on the "Backend Senior" assessment, read their
+teammate conversations and their prompt, file_diff, and command events. Grade
+how they scoped the task, verified the model's work, and used their teammates.
+Cite event timestamps.
+```
+
+## Errors
+
+A tool that the API refuses returns the API's status and body. For example, inviting candidates past your plan's limit returns `403` with `"code": "quota_exceeded"` and how many assessments you've used.

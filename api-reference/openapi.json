@@ -2143,6 +2143,14 @@
               "type": "string",
               "description": "Opaque page cursor: the previous page's `nextCursor`. The last event's `id` is also accepted."
             }
+          },
+          {
+            "name": "kinds",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated event kinds to return, e.g. `teammate_message,teammate_away`. Omit for every kind."
+            }
           }
         ]
       }
