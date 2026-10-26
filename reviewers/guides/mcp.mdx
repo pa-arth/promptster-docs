@@ -41,17 +41,19 @@ Create an API key in the dashboard under **Settings → API Keys**, then add the
 
 ## Tools
 
-| Tool | What it does |
+Every operation in the [API reference](/reviewers/api/authentication) is a tool, plus one for teammate conversations.
+
+| Area | Tools |
 |---|---|
-| `list_problems` | Problems an assessment can be built from: the library and your custom problems. |
-| `list_assessments`, `get_assessment` | Your assessments. |
-| `create_assessment` | Create an assessment from a problem. Does not use plan quota. |
-| `send_candidates` | Email invitations to up to 50 candidates. Each candidate uses one assessment from your plan. Sends to your own team's email domain are free. |
-| `list_candidates` | An assessment's candidates, their status, and each `sessionId` once they start. |
-| `resend_invitation` | Re-send a candidate's invitation. |
-| `get_session`, `get_session_scores` | A session's summary and Promptster's signals. |
-| `get_session_telemetry` | The raw event log, in order. See below. |
-| `get_teammate_conversations` | Every message between the candidate and the assessment's AI teammates. |
+| Problems | `list_problems`, `get_problem`, `create_custom_problem`, `get_custom_problem`, `update_custom_problem`, `create_problem_version`, `list_problem_versions` |
+| Assessments | `list_assessments`, `get_assessment`, `create_assessment`, `update_assessment`, `delete_assessment`, `get_assessment_cohort_stats` |
+| Teammates | `list_teammates`, `set_teammate_behavior` |
+| Candidates | `send_candidates`, `list_candidates`, `list_all_candidates`, `resend_invitation`, `revoke_candidate` |
+| Sessions | `list_sessions`, `get_session`, `get_session_scores`, `get_session_artifacts`, `get_session_decisions`, `get_prompt_analytics`, `get_interview_followups`, `get_session_cohort_stats` |
+| Raw telemetry | `get_session_telemetry`, `get_teammate_conversations` |
+| Organization | `list_provider_keys` |
+
+Creating an assessment doesn't use plan quota. Each candidate you send with `send_candidates` uses one assessment, except sends to your own team's email domain. Deleting an assessment or revoking a candidate can't be undone, so your assistant asks before it does either.
 
 ## Grade with raw telemetry
 
