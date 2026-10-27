@@ -77,16 +77,18 @@ Sessions often run to hundreds of events. To read one stream, pass `kinds` as a 
 
 Every session artifact is labelled `measured` or `judged`. `get_session_facts` returns only the measured ones:
 
-- hidden test-suite results: each test's name, pass or fail, and output
+- hidden test-suite results: each test's name, pass or fail, and output, plus any screenshots the tests took
 - the final diff and file tree (read any file with `get_file`)
-- prompt, command and tool counts, timings, token and cost totals
-- context sizes and which files the candidate's agent read
-- debug arcs: each failure and what the candidate did next
-- integrity checks and the teammate threads
+- prompt, command, diff and tool counts, and time to first change
+- the candidate agent's configuration
 
-`get_promptster_judgments` returns what a Promptster model scored or labelled: fluency and prompt-quality scores, key moments, the summary, follow-up questions, and cost-waste estimates.
+Token counts are on each `model_turn` event in `get_session_telemetry`. The teammate threads come from `get_teammate_conversations`.
 
-`get_grading_context` returns what the candidate was graded against, none of which they saw: the brief, your reference plan and conventions doc, teammate settings, and the problem's answer key. `get_signed_log` returns the event log with each event signed and chained, so you can show it wasn't altered after capture.
+`get_promptster_judgments` returns what a Promptster model or heuristic labelled, scored, or estimated: fluency and prompt-quality signals, key moments, work-style labels, integrity flags, the summary, follow-up questions, and cost-waste estimates.
+
+`get_grading_context` returns what the candidate was graded against. The candidate saw the brief. They never saw the rest: your reference plan and conventions doc, teammate settings, check-in questions, and the answer key (the hidden test suite and, for ticket-flow problems, the hidden requirements and who holds each).
+
+`get_signed_log` returns the event log with each event's signature and the one before it, plus the session's public key. The call doesn't verify anything: check the signatures and the chain yourself. Events captured without a signature carry no proof.
 
 If your own assistant does the grading, give it the grading context and the facts, and leave the judgments out.
 

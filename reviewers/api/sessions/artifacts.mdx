@@ -19,7 +19,7 @@ Authorization: Bearer psk_live_...
 </ParamField>
 
 <ParamField query="class" type="string">
-  `measured` returns only what was recorded, counted, or run (test results, diffs, the file tree, counts, timings, cost). `judged` returns only what a Promptster model scored or labelled. Omit for both.
+  `measured` returns only what was recorded, counted, or run (test results, diffs, the file tree, counts, timings, cost). `judged` returns only what a Promptster model or heuristic labelled, scored, or estimated. An artifact that mixes records with a label or estimate is judged. Omit for both.
 </ParamField>
 
 <ParamField query="kinds" type="string">
@@ -33,7 +33,7 @@ Authorization: Bearer psk_live_...
     <ResponseField name="sessionId" type="string">Parent session ID.</ResponseField>
     <ResponseField name="orgId" type="string">Organization ID.</ResponseField>
     <ResponseField name="kind" type="string">
-      Artifact type. One of: `analytics_v1`, `data_points_v1`, `prompt_analysis_v1`, `tool_proficiency_v1`, `key_moments_v1`, `test_results_v1`, `candidate_summary`, `interview_followups_v1`, `codebase_tree_v1`, `candidate_files_v1`.
+      Artifact type. Measured kinds: `analytics_v1`, `test_results_v1`, `screenshot_v1`, `github_diff_v1`, `codebase_tree_v1`, `config_census_v1`, `capture_capability_matrix_v1`. Judged kinds include `data_points_v1`, `prompt_analysis_v1`, `ai_fluency_v1`, `key_moments_v1`, `candidate_summary`, `interview_followups_v1`, `debug_arcs_v1`, `context_hygiene_v1`, `context_reads_v1`, `session_integrity_v1`, `teammate_threads_v1`. Which kinds a session has depends on its problem and tool.
     </ResponseField>
     <ResponseField name="class" type="string">`measured` or `judged`.</ResponseField>
     <ResponseField name="data" type="object">Artifact payload (structure varies by `kind`).</ResponseField>

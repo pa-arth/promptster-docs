@@ -2021,6 +2021,16 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "`class` is not `measured` or `judged`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         },
         "parameters": [
@@ -2031,6 +2041,28 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "measured",
+                "judged"
+              ]
+            },
+            "description": "`measured`: only what was recorded, counted or run. `judged`: only what a Promptster model or heuristic labelled, scored or estimated. Omit for both."
+          },
+          {
+            "name": "kinds",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated artifact kinds to return, e.g. `test_results_v1,github_diff_v1`."
           }
         ],
         "description": "Returns reviewer artifacts, including analytics and grading, when available. An empty array can mean nothing has been produced. Use this with an organization API key; the /analytics shortcut requires a dashboard token."
@@ -3077,6 +3109,286 @@
           },
           "404": {
             "description": "Resource not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/assessments/{id}/answer-key": {
+      "get": {
+        "summary": "Get an assessment's answer key",
+        "operationId": "getVAssessmentsIdAnswerKey",
+        "tags": [
+          "Assessments"
+        ],
+        "description": "What the assessment grades against and never shows the candidate: its hidden test suite (files and commands) and, for a ticket-flow problem, the full problem including hidden requirements, who holds each, and which are cut.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "testSuite": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "description": "Hidden test suite: testFramework, testCommand, setupCommand, testFiles, expectedTestCount, edgeCaseFiles, edgeCaseCommand, hygieneRules, timeoutSeconds."
+                    },
+                    "ticketFlowProblem": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "description": "The ticket-flow problem: `candidate` (ticket and personas) and `hidden` (requirements, unavailability). Null for other problems."
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions/{id}/file-content": {
+      "get": {
+        "summary": "Read a file from the final codebase",
+        "operationId": "getVSessionsIdFileContent",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "One file from the candidate's submitted codebase. List paths with the `codebase_tree_v1` artifact.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Path relative to the repo root."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sessions/{id}/signed-log": {
+      "get": {
+        "summary": "Get the signed event log",
+        "operationId": "getVSessionsIdSignedLog",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "The session's events as stored, each with its Ed25519 signature and the previous event's signature, plus the session's public key. Nothing is verified by this call: check each signature and the chain yourself. Unsigned events, or events whose signature failed at capture, carry no proof.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "signingPubkey": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "The session's Ed25519 public key."
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "ts": {
+                            "type": "string"
+                          },
+                          "payload": {},
+                          "sig": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "prevSig": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "eventHash": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "sigVerified": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ],
+                            "description": "Whether the signature checked out when the event was captured. Not a re-verification."
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found in your organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4148,6 +4460,14 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "measured",
+              "judged"
+            ],
+            "description": "Whether the artifact is a record (`measured`) or Promptster's judgment (`judged`)."
           }
         },
         "additionalProperties": true,
