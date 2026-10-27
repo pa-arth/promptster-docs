@@ -41,7 +41,7 @@ Create an API key in the dashboard under **Settings → API Keys**, then add the
 
 ## Tools
 
-Every operation in the [API reference](/reviewers/api/authentication) is a tool, plus one for teammate conversations.
+Every operation in the [API reference](/reviewers/api/authentication) is a tool, plus a few for grading: teammate conversations, the grading context, and facts and judgments read separately.
 
 | Area | Tools |
 |---|---|
@@ -50,7 +50,8 @@ Every operation in the [API reference](/reviewers/api/authentication) is a tool,
 | Teammates | `list_teammates`, `set_teammate_behavior` |
 | Candidates | `send_candidates`, `list_candidates`, `list_all_candidates`, `resend_invitation`, `revoke_candidate` |
 | Sessions | `list_sessions`, `get_session`, `get_session_scores`, `get_session_artifacts`, `get_session_decisions`, `get_prompt_analytics`, `get_interview_followups`, `get_session_cohort_stats` |
-| Raw telemetry | `get_session_telemetry`, `get_teammate_conversations` |
+| Raw telemetry | `get_session_telemetry`, `get_teammate_conversations`, `get_signed_log` |
+| Grading | `get_grading_context`, `get_session_facts`, `get_promptster_judgments`, `list_files`, `get_file` |
 | Organization | `list_provider_keys` |
 
 Creating an assessment doesn't use plan quota. Each candidate you send with `send_candidates` uses one assessment, except sends to your own team's email domain. Deleting an assessment or revoking a candidate can't be undone, so those tools tell your assistant to confirm with you first.
@@ -72,13 +73,30 @@ Sessions often run to hundreds of events. To read one stream, pass `kinds` as a 
 
 `get_teammate_conversations` returns the full teammate thread in one call. Each message has a `direction`: `to_persona` is the candidate writing, `from_persona` is the teammate replying.
 
+## Facts and judgments
+
+Every session artifact is labelled `measured` or `judged`. `get_session_facts` returns only the measured ones:
+
+- hidden test-suite results: each test's name, pass or fail, and output
+- the final diff and file tree (read any file with `get_file`)
+- prompt, command and tool counts, timings, token and cost totals
+- context sizes and which files the candidate's agent read
+- debug arcs: each failure and what the candidate did next
+- integrity checks and the teammate threads
+
+`get_promptster_judgments` returns what a Promptster model scored or labelled: fluency and prompt-quality scores, key moments, the summary, follow-up questions, and cost-waste estimates.
+
+`get_grading_context` returns what the candidate was graded against, none of which they saw: the brief, your reference plan and conventions doc, teammate settings, and the problem's answer key. `get_signed_log` returns the event log with each event signed and chained, so you can show it wasn't altered after capture.
+
+If your own assistant does the grading, give it the grading context and the facts, and leave the judgments out.
+
 A prompt that works well:
 
 ```text
-For each completed candidate on the "Backend Senior" assessment, read their
-teammate conversations and their prompt, file_diff, and command events. Grade
-how they scoped the task, verified the model's work, and used their teammates.
-Cite event timestamps.
+For each completed candidate on the "Backend Senior" assessment, read the
+grading context, their session facts, their teammate conversations, and their
+prompt, file_diff, and command events. Grade how they scoped the task, verified
+the model's work, and used their teammates. Cite event timestamps.
 ```
 
 ## Errors
